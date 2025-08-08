@@ -4,18 +4,17 @@ import type { Context, Next } from 'hono'
 class Handler {
   async runQuery(c: Context) {
     const title = c.req.query('title') || ''
-    
+    let page = c.req.query('page') || '0'
+    const intPage = isNaN(parseInt(page)) ? 0 : parseInt(page)
+
     try {
       const db = client.db('sample_mflix')
       const movies = db.collection('movies')
 
+      // Used skip and limit pagination for now, as I don't think there's that much data
       // const query = { title: {$regex: /The Great .*/i} }
       const query = { title: new RegExp(`^${title}`, 'i') }
-      const movie = movies.find(query).toArray()
-
-      if ((await movie).length > 20) {
-        return (await movie).slice(0, 20)
-      }
+      const movie = movies.find(query).skip(intPage).limit(20).toArray()
 
       return movie
     } catch (e) {
