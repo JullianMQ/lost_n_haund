@@ -1,11 +1,32 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
-import { client, run } from './db.js'
+import Handler from './handler.js'
 
-const app = new Hono()
+export const app = new Hono()
+const h = new Handler()
 
 app.get('/', (c) => {
   return c.text('Hello Hono!')
+})
+
+app.get('/movies', async (c) => {
+  c.header("Content-Type", "application/json")
+  try {
+    const movie = await h.runQuery(c)
+    if (!movie) {
+      c.status(404)
+      return c.json({ error: "Movie not found" })
+    }
+
+    c.status(200)
+    return c.json([
+
+      { "movie": movie }
+    ])
+  } catch (e) {
+    c.status(500)
+    c.json({ error: "Internal server error" })
+  }
 })
 
 const server = serve({
@@ -29,5 +50,3 @@ process.on('SIGTERM', () => {
     process.exit(0)
   })
 })
-
-run()
