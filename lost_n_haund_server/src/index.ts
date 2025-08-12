@@ -23,6 +23,11 @@ app.get('/movies', async (c) => {
 
       { "movie": movie }
     ])
+app.get('/upload', async (c) => {
+  c.header("Content-Type", "application/json")
+  c.status(200)
+  return c.json("Upload path works")
+})
   } catch (e) {
     c.status(500)
     c.json({ error: "Internal server error" })
