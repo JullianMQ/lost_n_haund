@@ -1,7 +1,16 @@
 import client from './db.js'
 import type { Context, Next } from 'hono'
+import { existsSync, mkdirSync, createReadStream } from 'fs'
+import { writeFile, unlink } from 'fs/promises'
 import { google } from 'googleapis'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
+// TODO: Maybe there's a way to upload the file directly? than saving it first in the server
+// Although we could do more operations(checking, minify, conversion etc.)
+// this way in the future, incase we need to minimize the file size works as needed right now
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 const CLIENT_ID = process.env.CLIENT_ID
 const CLIENT_SECRET = process.env.CLIENT_SECRET
 const REDIRECT_URI = process.env.REDIRECT_URI
@@ -34,6 +43,61 @@ class Handler {
       return movie
     } catch (e) {
       console.error("Error", e)
+    }
+  }
+
+  async postItem(c: Context) {
+    // TODO: Add information about
+    // Item name
+    // Item Category
+    // Description (how much money was in the wallet when they found it?)
+    // Location
+    // Status
+    // Reference ID       
+  }
+
+  async upload(c: Context, f: File) {
+    const dirPath = path.join(__dirname, 'assets', 'images')
+    if (!existsSync(dirPath)) {
+      mkdirSync(dirPath, { recursive: true })
+    }
+
+    const filePath = path.join(dirPath, f.name)
+    const buffer = await f.arrayBuffer()
+
+    try {
+      await writeFile(filePath, Buffer.from(buffer))
+
+      const res = await drive.files.create({
+        requestBody: {
+          name: f.name,
+          mimeType: f.type,
+        },
+        media: {
+          mimeType: f.type,
+          body: createReadStream(filePath)
+        }
+      })
+
+      const fileId = res.data.id
+
+      drive.permissions.create({
+        fileId: fileId!,
+        requestBody: {
+          role: 'reader',
+          type: 'anyone'
+        }
+      })
+      // server doesn't keep unnecessary files
+      await unlink(filePath)
+
+      return c.json({
+        message: 'File uploaded to Google Drive successfully',
+        urlImage: `https://lh3.googleusercontent.com/d/${res.data.id}`
+      })
+    } catch (err) {
+      console.error('Upload error:', err)
+      return c.json({ message: 'Error uploading file' }, 500)
     }
   }
 }

@@ -20,14 +20,33 @@ app.get('/movies', async (c) => {
 
     c.status(200)
     return c.json([
-
       { "movie": movie }
     ])
+
+  } catch (e) {
+    c.status(500)
+    c.json({ error: "Internal server error" })
+  }
+})
+
 app.get('/upload', async (c) => {
   c.header("Content-Type", "application/json")
   c.status(200)
   return c.json("Upload path works")
 })
+
+app.post('/upload', async (c) => {
+  c.header("Content-Type", "application/json")
+  const formData = await c.req.formData()
+  const file = formData.get('file')
+
+  try {
+    if (!file || !(file instanceof File)) {
+      return c.json({ message: 'No valid file uploaded' }, 400)
+    }
+
+    return await h.upload(c, file)
+
   } catch (e) {
     c.status(500)
     c.json({ error: "Internal server error" })
