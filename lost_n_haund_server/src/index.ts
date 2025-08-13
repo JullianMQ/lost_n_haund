@@ -12,7 +12,7 @@ app.get('/', (c) => {
 app.get('/users', async (c) => {
   c.header("Content-Type", "application/json")
   try {
-    const users = await h.runQuery(c)
+    const users = await h.getUsers(c)
     if (!users) {
       c.status(404)
       return c.json({ error: "users not found" })

@@ -26,7 +26,8 @@ oauth2Client.setCredentials({ refresh_token: REFRESH_TOKEN })
 const drive = google.drive({ version: 'v3', auth: oauth2Client })
 
 class Handler {
-  async runQuery(c: Context) {
+  async getUsers(c: Context) {
+    // TODO: Add ways to search by stud_id, email etc.
     const name = c.req.query('name') || ''
     let page = c.req.query('page') || '0'
     const intPage = isNaN(parseInt(page)) ? 0 : parseInt(page)
@@ -50,6 +51,7 @@ class Handler {
     // TODO: Add information about
     // Item name
     // Item Category
+    // Image
     // Description (how much money was in the wallet when they found it?)
     // Location
     // Status
