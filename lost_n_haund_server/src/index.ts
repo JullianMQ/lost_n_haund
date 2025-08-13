@@ -9,18 +9,18 @@ app.get('/', (c) => {
   return c.text('Hello Hono!')
 })
 
-app.get('/movies', async (c) => {
+app.get('/users', async (c) => {
   c.header("Content-Type", "application/json")
   try {
-    const movie = await h.runQuery(c)
-    if (!movie) {
+    const users = await h.runQuery(c)
+    if (!users) {
       c.status(404)
-      return c.json({ error: "Movie not found" })
+      return c.json({ error: "users not found" })
     }
 
     c.status(200)
     return c.json([
-      { "movie": movie }
+      { "users": users }
     ])
 
   } catch (e) {

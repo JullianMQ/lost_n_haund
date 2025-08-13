@@ -27,20 +27,20 @@ const drive = google.drive({ version: 'v3', auth: oauth2Client })
 
 class Handler {
   async runQuery(c: Context) {
-    const title = c.req.query('title') || ''
+    const name = c.req.query('name') || ''
     let page = c.req.query('page') || '0'
     const intPage = isNaN(parseInt(page)) ? 0 : parseInt(page)
 
     try {
       const db = client.db('sample_mflix')
-      const movies = db.collection('movies')
+      const usersDB = db.collection('users')
 
       // Used skip and limit pagination for now, as I don't think there's that much data
-      // const query = { title: {$regex: /The Great .*/i} }
-      const query = { title: new RegExp(`^${title}`, 'i') }
-      const movie = movies.find(query).skip(intPage).limit(20).toArray()
+      // const query = { name: {$regex: /Ned .*/i} }
+      const query = { name: new RegExp(`^${name}`, 'i') }
+      const users = usersDB.find(query).skip(intPage).limit(20).toArray()
 
-      return movie
+      return users
     } catch (e) {
       console.error("Error", e)
     }
