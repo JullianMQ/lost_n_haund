@@ -51,6 +51,40 @@ class Handler {
   }
 
   async postItem(c: Context) {
+  async getPosts(c: Context) {
+    const item_name = c.req.query('name') || ''
+    const description = c.req.query('description') || ''
+    const location_found = c.req.query('location') || ''
+    const status = c.req.query('status') || ''
+    const reference_id = c.req.query('reference_id') || ''
+    const item_category = c.req.queries('categories') || []
+    const page = c.req.query('page') === undefined ? 0 : parseInt(c.req.query('page')!)
+    const postsDB = db.collection('posts')
+
+    try {
+      const query = {
+        // TODO: REFACTOR THIS 
+        $and: [
+          { item_name: item_name !== '' ? new RegExp(`${item_name}`, 'i') : new RegExp(`.*`, 'i') },
+          { description: description !== '' ? new RegExp(`${description}`, 'i') : new RegExp(`.*`, 'i') },
+          { location_found: location_found !== '' ? new RegExp(`${location_found}`, 'i') : new RegExp(`.*`, 'i') },
+          { status: status !== '' ? new RegExp(`${status}`, 'i') : new RegExp(`.*`, 'i') },
+          { reference_id: reference_id !== '' ? reference_id : new RegExp(`.*`, 'i') },
+          {
+            item_category: item_category.length !== 0
+              ? { $all: item_category }
+              : { $not: / / }
+          },
+        ]
+      }
+      const posts = await postsDB.find(query).skip(page).limit(20).toArray()
+      return posts
+
+    } catch (e) {
+      console.error("Error", e);
+    }
+  }
+
     // TODO: Add information about
     // Item name
     // Item Category

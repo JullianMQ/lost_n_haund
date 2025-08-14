@@ -26,13 +26,18 @@ app.get('/users', async (c) => {
   }
 })
 
+app.get('/posts', async (c) => {
+  const posts = await h.getPosts(c)
+
+  return c.json(posts)
+})
+
 app.get('/upload', async (c) => {
   c.status(200)
   return c.json("Upload path works")
 })
 
 app.post('/upload', async (c) => {
-  c.header("Content-Type", "application/json")
   const formData = await c.req.formData()
   const file = formData.get('file')
 
