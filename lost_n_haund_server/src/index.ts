@@ -10,7 +10,6 @@ app.get('/', (c) => {
 })
 
 app.get('/users', async (c) => {
-  c.header("Content-Type", "application/json")
   try {
     const users = await h.getUsers(c)
     if (!users) {
@@ -19,18 +18,15 @@ app.get('/users', async (c) => {
     }
 
     c.status(200)
-    return c.json([
-      { "users": users }
-    ])
+    return c.json( { users } )
 
   } catch (e) {
     c.status(500)
-    c.json({ error: "Internal server error" })
+    return c.json({ error: "Internal server error" })
   }
 })
 
 app.get('/upload', async (c) => {
-  c.header("Content-Type", "application/json")
   c.status(200)
   return c.json("Upload path works")
 })
@@ -45,11 +41,16 @@ app.post('/upload', async (c) => {
       return c.json({ message: 'No valid file uploaded' }, 400)
     }
 
-    return await h.upload(c, file)
+    const [success, error] = await h.upload(c, file)
+    if (JSON.stringify(error) !== JSON.stringify(Error(""))) {
+      throw error;
+    }
+
+    return c.json({ success })
 
   } catch (e) {
     c.status(500)
-    c.json({ error: "Internal server error" })
+    return c.json({ error: e })
   }
 })
 

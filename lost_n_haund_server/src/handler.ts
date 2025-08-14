@@ -1,5 +1,7 @@
 import client from './db.js'
 import type { Context, Next } from 'hono'
+import type { Success } from './utils/success.js'
+import { NewSuccess } from './utils/success.js'
 import { existsSync, mkdirSync, createReadStream } from 'fs'
 import { writeFile, unlink } from 'fs/promises'
 import { google } from 'googleapis'
@@ -24,22 +26,23 @@ const oauth2Client = new google.auth.OAuth2(
 
 oauth2Client.setCredentials({ refresh_token: REFRESH_TOKEN })
 const drive = google.drive({ version: 'v3', auth: oauth2Client })
+const db = client.db('lost_n_haund')
 
 class Handler {
   async getUsers(c: Context) {
     // TODO: Add ways to search by stud_id, email etc.
-    const name = c.req.query('name') || ''
-    let page = c.req.query('page') || '0'
-    const intPage = isNaN(parseInt(page)) ? 0 : parseInt(page)
+    const user_name = c.req.query('name') || ''
+    // const user_num = c.req.query('user_num') || ''
+    const page = c.req.query('page') === undefined ? 0 : parseInt(c.req.query('page')!)
+    const usersDB = db.collection('users')
 
     try {
-      const db = client.db('sample_mflix')
-      const usersDB = db.collection('users')
-
       // Used skip and limit pagination for now, as I don't think there's that much data
-      // const query = { name: {$regex: /Ned .*/i} }
-      const query = { name: new RegExp(`^${name}`, 'i') }
-      const users = usersDB.find(query).skip(intPage).limit(20).toArray()
+      // const query = { name: {$regex: /john .*/i} }
+      const query = {
+        user_name: new RegExp(`^${user_name}`, 'i')
+      }
+      const users = await usersDB.find(query).skip(page).limit(20).toArray()
 
       return users
     } catch (e) {
@@ -58,7 +61,8 @@ class Handler {
     // Reference ID       
   }
 
-  async upload(c: Context, f: File) {
+  async upload(c: Context, f: File): Promise<[Success, Error]> {
+    let [success, error] = [NewSuccess(""), Error("")]
     const dirPath = path.join(__dirname, 'assets', 'images')
     if (!existsSync(dirPath)) {
       mkdirSync(dirPath, { recursive: true })
@@ -93,13 +97,17 @@ class Handler {
       // server doesn't keep unnecessary files
       await unlink(filePath)
 
-      return c.json({
+      success = {
         message: 'File uploaded to Google Drive successfully',
         urlImage: `https://lh3.googleusercontent.com/d/${res.data.id}`
-      })
-    } catch (err) {
-      console.error('Upload error:', err)
-      return c.json({ message: 'Error uploading file' }, 500)
+      }
+
+      return [success, error]
+
+    } catch (e) {
+      error = e as Error
+      console.error('Upload error:', e)
+      return [success, error]
     }
   }
 }
