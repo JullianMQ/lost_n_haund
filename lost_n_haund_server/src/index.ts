@@ -26,6 +26,16 @@ app.get('/users', async (c) => {
   }
 })
 
+app.post('/posts', async (c) => {
+  const [message, err] = await h.postPosts(c)
+  if (String(err) !== "") {
+    c.status(400)
+    return c.json({ Message: err })
+  }
+
+  return c.json({ Message: message })
+})
+
 app.get('/posts', async (c) => {
   const posts = await h.getPosts(c)
 

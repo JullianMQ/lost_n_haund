@@ -8,6 +8,9 @@ import { writeFile, unlink } from 'fs/promises'
 import { google } from 'googleapis'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { z } from 'zod'
+import { zValidator } from '@hono/zod-validator'
+import { nullPostsSchema, type postsSchema } from './utils/postsTypes.js'
 
 // TODO: Maybe there's a way to upload the file directly? than saving it first in the server
 // Although we could do more operations(checking, minify, conversion etc.)
@@ -94,16 +97,42 @@ class Handler {
     }
   }
 
-  async postPosts(c: Context) {
-    // TODO: Add information about
-    // item_name: String
-    // item_category: Array[String]
-    // image: String/URL Address
-    // description (how much money was in the wallet when they found it?)
-    // location: String"
-    // status: Returned, Held, Pending, Archived
-    // reference_id: String
-    const body = c.req.formData()
+  postsSchema = z.object({
+    item_name: z.string(),
+    item_category: z.array(z.string()),
+    description: z.string(),
+    date_found: z.coerce.date(),
+    location_found: z.string(),
+    status: z.enum(["held", "archived", "pending", "returned"]).default("pending"),
+    reference_id: z.string(),
+  })
+
+  async postPosts(c: Context): Promise<[postsSchema, CustomError]> {
+    const formData = await c.req.formData()
+    const [phTime, minutes, seconds, ms] = [8, 60, 60, 1000]
+    const rawData = {
+      item_name: formData.get("item_name") as string,
+      item_category: (formData.getAll("item_category") as string[]) ?? [],
+      description: formData.get("description") as string,
+      date_found: localToUTC(formData.get("date_found") as string, phTime),
+      location_found: formData.get("location_found") as string,
+      status: (formData.get("status") as string) || "pending",
+      reference_id: formData.get("reference_id") as string,
+    }
+
+    function localToUTC(dateStr: string, tzOffsetHours: number) {
+      let localDate = new Date(dateStr)
+      let utcDate = new Date(localDate.getTime() - tzOffsetHours * minutes * seconds * ms) // conversion from ph to utc for database storing
+      return utcDate
+    }
+
+    const res = this.postsSchema.safeParse(rawData)
+    if (res.success === false) {
+      console.error(res.error);
+      return [nullPostsSchema, NewError('Error parsing data')]
+    }
+
+    return [res.data, NewError("")]
   }
 
   async upload(f: File): Promise<[Success, CustomError]> {
