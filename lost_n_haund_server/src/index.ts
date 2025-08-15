@@ -47,10 +47,12 @@ app.post('/upload', async (c) => {
     }
 
     const [success, error] = await h.upload(file)
-    if (JSON.stringify(error) !== JSON.stringify(Error(""))) {
-      throw error;
+    if (error !== "") {
+      c.status(503)
+      return c.json({ error: error });
     }
 
+    c.status(200)
     return c.json({ success })
 
   } catch (e) {

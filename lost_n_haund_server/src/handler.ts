@@ -1,8 +1,8 @@
 import client from './db.js'
 import type { Context } from 'hono'
-import type { Success } from './utils/success.js'
+import type { Success, CustomError } from './utils/success.js'
 import { regexOrAll } from './utils/regexUtil.js'
-import { NewSuccess } from './utils/success.js'
+import { NewSuccess, NewError } from './utils/success.js'
 import { existsSync, mkdirSync, createReadStream } from 'fs'
 import { writeFile, unlink } from 'fs/promises'
 import { google } from 'googleapis'
@@ -106,8 +106,8 @@ class Handler {
     const body = c.req.formData()
   }
 
-  async upload(f: File): Promise<[Success, Error]> {
-    let [success, error] = [NewSuccess(""), Error("")]
+  async upload(f: File): Promise<[Success, CustomError]> {
+    let [success, error] = [NewSuccess(""), NewError("")]
     const dirPath = path.join(__dirname, 'assets', 'images')
     if (!existsSync(dirPath)) {
       mkdirSync(dirPath, { recursive: true })
@@ -150,9 +150,15 @@ class Handler {
       return [success, error]
 
     } catch (e) {
-      error = e as Error
-      console.error('Upload error:', e)
-      return [success, error]
+      if (e instanceof Error) {
+        console.error('Service unavailable: ', e)
+        const err = NewError(e)
+        return [success, err]
+      }
+
+      // basically useless, but needed in case we throw errors that are not Error objects
+      const err = NewError(String(e))
+      return [success, err]
     }
   }
 }
