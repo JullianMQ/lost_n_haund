@@ -1,6 +1,7 @@
 import client from './db.js'
-import type { Context, Next } from 'hono'
+import type { Context } from 'hono'
 import type { Success } from './utils/success.js'
+import { regexOrAll } from './utils/regexUtil.js'
 import { NewSuccess } from './utils/success.js'
 import { existsSync, mkdirSync, createReadStream } from 'fs'
 import { writeFile, unlink } from 'fs/promises'
@@ -50,7 +51,16 @@ class Handler {
     }
   }
 
-  async postItem(c: Context) {
+  // TODO: pass an object to get both keys and value
+  // as a way to filter
+  // queryFunc(object) {
+  //   [...args].forEach(element => {
+  //     if (element === "" || element.length === 0) {
+  //
+  //     }
+  //   });
+  // }
+
   async getPosts(c: Context) {
     const item_name = c.req.query('name') || ''
     const description = c.req.query('description') || ''
@@ -63,13 +73,12 @@ class Handler {
 
     try {
       const query = {
-        // TODO: REFACTOR THIS 
         $and: [
-          { item_name: item_name !== '' ? new RegExp(`${item_name}`, 'i') : new RegExp(`.*`, 'i') },
-          { description: description !== '' ? new RegExp(`${description}`, 'i') : new RegExp(`.*`, 'i') },
-          { location_found: location_found !== '' ? new RegExp(`${location_found}`, 'i') : new RegExp(`.*`, 'i') },
-          { status: status !== '' ? new RegExp(`${status}`, 'i') : new RegExp(`.*`, 'i') },
-          { reference_id: reference_id !== '' ? reference_id : new RegExp(`.*`, 'i') },
+          { item_name: regexOrAll(item_name) },
+          { description: regexOrAll(description) },
+          { location_found: regexOrAll(location_found) },
+          { status: regexOrAll(status) },
+          { reference_id: regexOrAll(reference_id) },
           {
             item_category: item_category.length !== 0
               ? { $all: item_category }
@@ -85,17 +94,19 @@ class Handler {
     }
   }
 
+  async postPosts(c: Context) {
     // TODO: Add information about
-    // Item name
-    // Item Category
-    // Image
-    // Description (how much money was in the wallet when they found it?)
-    // Location
-    // Status
-    // Reference ID       
+    // item_name: String
+    // item_category: Array[String]
+    // image: String/URL Address
+    // description (how much money was in the wallet when they found it?)
+    // location: String"
+    // status: Returned, Held, Pending, Archived
+    // reference_id: String
+    const body = c.req.formData()
   }
 
-  async upload(c: Context, f: File): Promise<[Success, Error]> {
+  async upload(f: File): Promise<[Success, Error]> {
     let [success, error] = [NewSuccess(""), Error("")]
     const dirPath = path.join(__dirname, 'assets', 'images')
     if (!existsSync(dirPath)) {

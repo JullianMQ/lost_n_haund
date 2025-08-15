@@ -46,7 +46,7 @@ app.post('/upload', async (c) => {
       return c.json({ message: 'No valid file uploaded' }, 400)
     }
 
-    const [success, error] = await h.upload(c, file)
+    const [success, error] = await h.upload(file)
     if (JSON.stringify(error) !== JSON.stringify(Error(""))) {
       throw error;
     }
