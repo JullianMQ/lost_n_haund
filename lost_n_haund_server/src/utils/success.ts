@@ -1,3 +1,5 @@
+import type { StatusCode } from "hono/utils/http-status"
+
 export type Success = {
   message?: unknown
   urlImage?: string
@@ -14,6 +16,12 @@ const NewError = ( message: string | Error ):
 }
 
 export { NewSuccess, NewError }
+
+export type HandlerResult = {
+  success?: Success
+  error?: CustomError
+  status: StatusCode
+}
 
 // export interface SuccessConstructor {
 //   new (message?: string, urlImage?: string) : Success

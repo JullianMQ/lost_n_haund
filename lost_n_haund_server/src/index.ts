@@ -18,7 +18,7 @@ app.get('/users', async (c) => {
     }
 
     c.status(200)
-    return c.json( { users } )
+    return c.json({ users })
 
   } catch (e) {
     c.status(500)
@@ -26,18 +26,28 @@ app.get('/users', async (c) => {
   }
 })
 
-app.post('/posts', async (c) => {
-  const [message, err] = await h.postPosts(c)
-  if (String(err) !== "") {
-    c.status(400)
-    return c.json({ Message: err })
-  }
-
-  return c.json({ Message: message })
-})
-
 app.get('/posts', async (c) => {
   const posts = await h.getPosts(c)
+
+  return c.json(posts)
+})
+
+app.post('/posts', async (c) => {
+  const res = await h.postPosts(c)
+  if (res.status === 400) {
+    c.status(res.status)
+    return c.json( res.error )
+  }
+
+  if (res.status === 500) {
+    c.status(res.status)
+    return c.json( res.error )
+  }
+
+  c.status(res.status)
+  return c.json( res.success )
+})
+
 
   return c.json(posts)
 })

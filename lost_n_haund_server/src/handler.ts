@@ -1,6 +1,7 @@
 import client from './db.js'
 import type { Context } from 'hono'
 import type { Success, CustomError } from './utils/success.js'
+import type { Success, CustomError, HandlerResult } from './utils/success.js'
 import { regexOrAll } from './utils/regexUtil.js'
 import { NewSuccess, NewError } from './utils/success.js'
 import { existsSync, mkdirSync, createReadStream } from 'fs'
@@ -107,24 +108,61 @@ class Handler {
     reference_id: z.string(),
   })
 
-  async postPosts(c: Context): Promise<[postsSchema, CustomError]> {
+  async postPosts(c: Context): Promise<HandlerResult> {
     const formData = await c.req.formData()
+    const postsDB = db.collection('posts')
     const [phTime, minutes, seconds, ms] = [8, 60, 60, 1000]
-    const rawData = {
-      item_name: formData.get("item_name") as string,
-      item_category: (formData.getAll("item_category") as string[]) ?? [],
-      description: formData.get("description") as string,
-      date_found: localToUTC(formData.get("date_found") as string, phTime),
-      location_found: formData.get("location_found") as string,
-      status: (formData.get("status") as string) || "pending",
-      reference_id: formData.get("reference_id") as string,
+
+    try {
+      const rawData = {
+        item_name: formData.get("item_name") as string,
+        item_category: (formData.getAll("item_category") as string[]) ?? [],
+        description: formData.get("description") as string,
+        date_found: localToUTC(formData.get("date_found") as string, phTime),
+        location_found: formData.get("location_found") as string,
+        status: (formData.get("status") as string) || "pending",
+        reference_id: formData.get("reference_id") as string,
+      }
+
+      function localToUTC(dateStr: string, tzOffsetHours: number) {
+        let localDate = new Date(dateStr)
+        let utcDate = new Date(localDate.getTime() - tzOffsetHours * minutes * seconds * ms) // conversion from ph to utc for database storing
+        return utcDate
+      }
+
+      const res = this.postsSchema.safeParse(rawData)
+      if (!res.success) {
+        console.error(res.error);
+        return {
+          error: NewError('Error parsing data'),
+          status: 400
+        }
+      }
+
+      const postResult = await postsDB.insertOne( res.data )
+      console.log("postResult", postResult)
+      if (!postResult.acknowledged) {
+        return {
+          error: NewError('Mongo error'),
+          status: 503
+        }
+      }
+
+      return {
+        success: NewSuccess('Item successfully posted'),
+        status: 201
+      }
     }
 
-    function localToUTC(dateStr: string, tzOffsetHours: number) {
-      let localDate = new Date(dateStr)
-      let utcDate = new Date(localDate.getTime() - tzOffsetHours * minutes * seconds * ms) // conversion from ph to utc for database storing
-      return utcDate
+    catch (e) {
+      console.error('Internal server error:', e);
+      return {
+        error: NewError('Internal server error'),
+        status: 500
+      }
     }
+  }
+
 
     const res = this.postsSchema.safeParse(rawData)
     if (res.success === false) {
