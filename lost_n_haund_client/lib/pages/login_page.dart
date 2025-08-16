@@ -16,16 +16,23 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("images/holy.jpg"),
+            fit: BoxFit.cover,
+          ),
+      ),
+      child: SafeArea(
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text(
                 'Welcome to the Login Page!',
-                style: TextStyle(fontSize: 24),
+                style: TextStyle(fontSize: 24, color: Colors.white),
               ),
+
               const SizedBox(height: 20),
               
               //username
@@ -47,28 +54,44 @@ class LoginPage extends StatelessWidget {
               const SizedBox(height: 20),
 
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                padding: const EdgeInsets.symmetric(horizontal: 25.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Text("Forgot Password?",
-                      style: TextStyle(color: Colors.grey[600]),
+                      style: TextStyle(color: Colors.white),
                     )
                 ],
               ),
               ),
 
               MyButton(
-                onTap: () {
-                  // Handle sign in logic here
-                  print("Sign In Pressed");
-                },
+                onTap: signUserIn,
               ),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Not a member?',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  const SizedBox(width: 4),
+                  const Text(
+                    'Register now',
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              )
 
             ],
           ),
         ),
       ),
+    )
     );
   }
 }
