@@ -202,7 +202,7 @@ class Handler {
 
       return {
         success: NewSuccess('Post update successfully'),
-        status: 204
+        status: 200
       }
     }
 
