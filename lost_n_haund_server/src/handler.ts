@@ -134,7 +134,6 @@ class Handler {
       }
 
       const postResult = await postsDB.insertOne(res.data)
-      console.log("postResult", postResult)
       if (!postResult.acknowledged) {
         return {
           error: NewError('Mongo error'),
@@ -208,6 +207,43 @@ class Handler {
 
     catch (e) {
       console.error('Error updating post:', e);
+      return {
+        status: 500,
+        error: NewError('Internal server error')
+      }
+    }
+  }
+
+  async deletePost(c: Context): Promise<HandlerResult> {
+    const postsDB = db.collection('posts')
+    const postID = c.req.param('id')
+
+    try {
+      const res = await postsDB.deleteOne(
+        { reference_id: postID }
+      )
+
+      if (res.deletedCount === 0) {
+        return {
+          error: NewError("Data not found"),
+          status: 404
+        }
+      }
+
+      if (!res.acknowledged) {
+        return {
+          error: NewError('Mongo error'),
+          status: 503
+        }
+      }
+
+      return {
+        success: NewSuccess("Data successfully deleted"),
+        status: 202
+      }
+
+    } catch (e) {
+      console.error('Error deleting post:', e);
       return {
         status: 500,
         error: NewError('Internal server error')

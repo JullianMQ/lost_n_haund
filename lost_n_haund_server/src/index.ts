@@ -65,6 +65,28 @@ app.put('/posts/:id', async (c) => {
   return c.json( res.success )
 })
 
+app.delete('/posts/:id', async (c) => {
+  const res = await h.deletePost(c)
+
+  if (res.status === 404) {
+    c.status(res.status)
+    return c.json( res.error )
+  }
+
+  if (res.status === 503) {
+    c.status(res.status)
+    return c.json( res.error )
+  }
+
+  if (res.status === 500) {
+    c.status(res.status)
+    return c.json( res.error )
+  }
+
+  c.status(res.status)
+  return c.json( res.success )
+})
+
 app.get('/upload', async (c) => {
   c.status(200)
   return c.json("Upload path works")
