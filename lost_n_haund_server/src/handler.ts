@@ -1,6 +1,5 @@
 import client from './db.js'
 import type { Context } from 'hono'
-import type { Success, CustomError } from './utils/success.js'
 import type { Success, CustomError, HandlerResult } from './utils/success.js'
 import { regexOrAll } from './utils/regexUtil.js'
 import { NewSuccess, NewError } from './utils/success.js'
@@ -12,6 +11,8 @@ import { fileURLToPath } from 'url'
 import { z } from 'zod'
 import { zValidator } from '@hono/zod-validator'
 import { nullPostsSchema, type postsSchema } from './utils/postsTypes.js'
+import { localToUTC, phTime } from './utils/dateTimeConversion.js'
+import type { stringFormat } from 'zod/mini'
 
 // TODO: Maybe there's a way to upload the file directly? than saving it first in the server
 // Although we could do more operations(checking, minify, conversion etc.)
@@ -111,7 +112,6 @@ class Handler {
   async postPosts(c: Context): Promise<HandlerResult> {
     const formData = await c.req.formData()
     const postsDB = db.collection('posts')
-    const [phTime, minutes, seconds, ms] = [8, 60, 60, 1000]
 
     try {
       const rawData = {
@@ -124,12 +124,6 @@ class Handler {
         reference_id: formData.get("reference_id") as string,
       }
 
-      function localToUTC(dateStr: string, tzOffsetHours: number) {
-        let localDate = new Date(dateStr)
-        let utcDate = new Date(localDate.getTime() - tzOffsetHours * minutes * seconds * ms) // conversion from ph to utc for database storing
-        return utcDate
-      }
-
       const res = this.postsSchema.safeParse(rawData)
       if (!res.success) {
         console.error(res.error);
@@ -139,7 +133,7 @@ class Handler {
         }
       }
 
-      const postResult = await postsDB.insertOne( res.data )
+      const postResult = await postsDB.insertOne(res.data)
       console.log("postResult", postResult)
       if (!postResult.acknowledged) {
         return {
@@ -163,14 +157,62 @@ class Handler {
     }
   }
 
+  async updatePost(c: Context): Promise<HandlerResult> {
+    const postsDB = db.collection('posts')
+    const id = c.req.param('id')
 
-    const res = this.postsSchema.safeParse(rawData)
-    if (res.success === false) {
-      console.error(res.error);
-      return [nullPostsSchema, NewError('Error parsing data')]
+    try {
+      const formData = await c.req.formData()
+      const updatedData: Record<string, unknown> = {}
+      const formEntries = formData.entries()
+
+      for (const [key, value] of formEntries) {
+        if (value === null) continue
+        if (typeof value === "string" && value.trim() === "") continue
+
+        if (key === "item_category") {
+          const categories = formData.getAll("item_category") as string[]
+          if (categories.length > 0) updatedData[key] = categories
+        } else if (key === "date_found") {
+          updatedData[key] = localToUTC(value as string, phTime)
+        } else {
+          updatedData[key] = value
+        }
+      }
+
+      const res = this.postsSchema.partial().safeParse(updatedData)
+      if (!res.success) {
+        return {
+          status: 400,
+          error: NewError('Invalid data')
+        }
+      }
+
+      const updateResult = await postsDB.updateOne(
+        { reference_id: id },
+        { $set: updatedData }
+      )
+
+      if (updateResult.matchedCount === 0) {
+        return {
+          status: 400,
+          error: NewError('Post not found')
+        }
+      }
+
+      return {
+        success: NewSuccess('Post update successfully'),
+        status: 204
+      }
     }
 
-    return [res.data, NewError("")]
+    catch (e) {
+      console.error('Error updating post:', e);
+      return {
+        status: 500,
+        error: NewError('Internal server error')
+      }
+    }
   }
 
   async upload(f: File): Promise<[Success, CustomError]> {

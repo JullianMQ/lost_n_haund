@@ -48,8 +48,21 @@ app.post('/posts', async (c) => {
   return c.json( res.success )
 })
 
+app.put('/posts/:id', async (c) => {
+  const res = await h.updatePost(c)
 
-  return c.json(posts)
+  if (res.status === 400) {
+    c.status(res.status)
+    return c.json( res.error )
+  }
+
+  if (res.status === 500) {
+    c.status(res.status)
+    return c.json( res.error )
+  }
+
+  c.status(res.status)
+  return c.json( res.success )
 })
 
 app.get('/upload', async (c) => {
