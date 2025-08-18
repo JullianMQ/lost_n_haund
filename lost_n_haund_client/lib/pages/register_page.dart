@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:lost_n_haund_client/components/my_button.dart';
 import 'package:lost_n_haund_client/components/my_textfield.dart';
-import 'package:lost_n_haund_client/pages/register_page.dart';
+import 'package:lost_n_haund_client/pages/login_page.dart';
 
-class LoginPage extends StatelessWidget {
-  LoginPage({super.key});
+class RegisterPage extends StatelessWidget {
+  RegisterPage({super.key});
 
-  //text controllers
-  final usernameController = TextEditingController();
+  // text controllers
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final contactController = TextEditingController();
   final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
-  void signUserIn() {
-    
+  void registerUser() {
+    // TODO: Add registration logic
   }
 
   @override
@@ -20,9 +24,9 @@ class LoginPage extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Container(
         width: double.infinity,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("images/holy.jpg"),
+            image: AssetImage("images/holy.jpg"), 
             fit: BoxFit.cover,
           ),
         ),
@@ -40,7 +44,7 @@ class LoginPage extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      "Login Form",
+                      "Registration Form",
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -49,57 +53,81 @@ class LoginPage extends StatelessWidget {
                     ),
 
                     const SizedBox(height: 20),
-              
-                    //username
+
+                    // First Name
                     MyTextfield(
-                      controller: usernameController,
-                      hintText: 'Username',
+                      controller: firstNameController,
+                      hintText: 'First Name',
                       obscureText: false,
                     ),
 
                     const SizedBox(height: 10),
 
-                    //pass
+                    // Last Name
+                    MyTextfield(
+                      controller: lastNameController,
+                      hintText: 'Last Name',
+                      obscureText: false,
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Email
+                    MyTextfield(
+                      controller: emailController,
+                      hintText: 'Hau Email',
+                      obscureText: false,
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Contact
+                    MyTextfield(
+                      controller: contactController,
+                      hintText: 'Student Number',
+                      obscureText: false,
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Password
                     MyTextfield(
                       controller: passwordController,
                       hintText: 'Password',
                       obscureText: true,
                     ),
 
+                    const SizedBox(height: 10),
+
+                    // Confirm Password
+                    MyTextfield(
+                      controller: confirmPasswordController,
+                      hintText: 'Confirm Password',
+                      obscureText: true,
+                    ),
+
                     const SizedBox(height: 20),
 
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text("Forgot Password?",
-                            style: TextStyle(color: Colors.white),
-                          )
-                        ],
-                      ),
+                    MyButton(
+                      onTap: registerUser,
                     ),
 
-                    MyButton(
-                      onTap: signUserIn,
-                    ),
+                    const SizedBox(height: 20),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          'Not a member?',
+                        const Text(
+                          'Already a member?',
                           style: TextStyle(color: Colors.white),
                         ),
-
                         const SizedBox(width: 4),
-
                         GestureDetector(
                           onTap: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterPage()));
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage()));
                           },
                           child: const Text(
-                            'Register now',
+                            'Login here',
                             style: TextStyle(
                               color: Colors.blue,
                               fontWeight: FontWeight.bold,
