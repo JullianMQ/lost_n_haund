@@ -1,17 +1,15 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
-import Handler from './handler.js'
+import UserHandler from './handlers/userHandler.js'
+import PostHandler from './handlers/postHandler.js'
 
 export const app = new Hono()
-const h = new Handler()
-
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
-})
+const u = new UserHandler()
+const p = new PostHandler()
 
 app.get('/users', async (c) => {
   try {
-    const users = await h.getUsers(c)
+    const users = await u.getUsers(c)
     if (!users) {
       c.status(404)
       return c.json({ error: "users not found" })
@@ -27,13 +25,13 @@ app.get('/users', async (c) => {
 })
 
 app.get('/posts', async (c) => {
-  const posts = await h.getPosts(c)
+  const posts = await p.getPosts(c)
 
   return c.json(posts)
 })
 
 app.post('/posts', async (c) => {
-  const res = await h.postPosts(c)
+  const res = await p.postPosts(c)
   if (res.status === 400) {
     c.status(res.status)
     return c.json( res.error )
@@ -49,7 +47,7 @@ app.post('/posts', async (c) => {
 })
 
 app.put('/posts/:id', async (c) => {
-  const res = await h.updatePost(c)
+  const res = await p.updatePost(c)
 
   if (res.status === 400) {
     c.status(res.status)
@@ -66,7 +64,7 @@ app.put('/posts/:id', async (c) => {
 })
 
 app.delete('/posts/:id', async (c) => {
-  const res = await h.deletePost(c)
+  const res = await p.deletePost(c)
 
   if (res.status === 404) {
     c.status(res.status)
@@ -101,7 +99,7 @@ app.post('/upload', async (c) => {
       return c.json({ message: 'No valid file uploaded' }, 400)
     }
 
-    const [success, error] = await h.upload(file)
+    const [success, error] = await u.upload(file)
     if (error !== "") {
       c.status(503)
       return c.json({ error: error });
