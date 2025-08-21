@@ -1,10 +1,13 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
+import { auth } from './utils/auth.js'
 import UserHandler from './handlers/userHandler.js'
 import PostHandler from './handlers/postHandler.js'
+import UserAuth from './handlers/userAuthHandlers.js'
 
 export const app = new Hono()
 const u = new UserHandler()
+const a = new UserAuth()
 const p = new PostHandler()
 
 app.get('/users', async (c) => {
@@ -24,6 +27,31 @@ app.get('/users', async (c) => {
   }
 })
 
+// TODO: keep for when next refactor comes, just need to mount the handlers
+// app.on(["POST", "GET"], "/users/auth/**", (c) => auth.handler(c.req.raw))
+
+app.post('/users/auth/sign-up/email', async (c) => {
+  const res = await a.signUp(c)
+  c.status(res.status)
+
+  if (res.status >= 400) {
+    return c.json(res.error)
+  }
+
+  return c.json(res.success)
+})
+
+app.post('/users/auth/sign-in/email', async (c) => {
+  const res = await a.signIn(c)
+  c.status(res.status)
+
+  if (res.status >= 400) {
+    return c.json(res.error)
+  }
+
+  return c.json(res.success)
+})
+
 app.get('/posts', async (c) => {
   const posts = await p.getPosts(c)
 
@@ -34,16 +62,16 @@ app.post('/posts', async (c) => {
   const res = await p.postPosts(c)
   if (res.status === 400) {
     c.status(res.status)
-    return c.json( res.error )
+    return c.json(res.error)
   }
 
   if (res.status === 500) {
     c.status(res.status)
-    return c.json( res.error )
+    return c.json(res.error)
   }
 
   c.status(res.status)
-  return c.json( res.success )
+  return c.json(res.success)
 })
 
 app.put('/posts/:id', async (c) => {
@@ -51,16 +79,16 @@ app.put('/posts/:id', async (c) => {
 
   if (res.status === 400) {
     c.status(res.status)
-    return c.json( res.error )
+    return c.json(res.error)
   }
 
   if (res.status === 500) {
     c.status(res.status)
-    return c.json( res.error )
+    return c.json(res.error)
   }
 
   c.status(res.status)
-  return c.json( res.success )
+  return c.json(res.success)
 })
 
 app.delete('/posts/:id', async (c) => {
@@ -68,21 +96,21 @@ app.delete('/posts/:id', async (c) => {
 
   if (res.status === 404) {
     c.status(res.status)
-    return c.json( res.error )
+    return c.json(res.error)
   }
 
   if (res.status === 503) {
     c.status(res.status)
-    return c.json( res.error )
+    return c.json(res.error)
   }
 
   if (res.status === 500) {
     c.status(res.status)
-    return c.json( res.error )
+    return c.json(res.error)
   }
 
   c.status(res.status)
-  return c.json( res.success )
+  return c.json(res.success)
 })
 
 app.get('/upload', async (c) => {

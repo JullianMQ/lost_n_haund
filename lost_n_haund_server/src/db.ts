@@ -3,7 +3,7 @@ import "dotenv/config"
 
 const uri = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@lostnhaund.o9effwu.mongodb.net/?retryWrites=true&w=majority&appName=LostnHAUnd`
 
-const client = new MongoClient(uri);
+export const client = new MongoClient(uri);
 const db = client.db('lost_n_haund')
 
 export async function run() {
