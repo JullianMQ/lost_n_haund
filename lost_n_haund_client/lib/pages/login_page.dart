@@ -22,7 +22,7 @@ class LoginPage extends StatelessWidget {
         width: double.infinity,
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("images/holy.jpg"),
+            image: AssetImage("images/bg-hau.jpg"),
             fit: BoxFit.cover,
           ),
         ),
@@ -55,6 +55,7 @@ class LoginPage extends StatelessWidget {
                       controller: usernameController,
                       hintText: 'Username',
                       obscureText: false,
+                      maxLines: 1,
                     ),
 
                     const SizedBox(height: 10),
@@ -64,6 +65,7 @@ class LoginPage extends StatelessWidget {
                       controller: passwordController,
                       hintText: 'Password',
                       obscureText: true,
+                      maxLines: 1,
                     ),
 
                     const SizedBox(height: 20),

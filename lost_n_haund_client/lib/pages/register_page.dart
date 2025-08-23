@@ -26,7 +26,7 @@ class RegisterPage extends StatelessWidget {
         width: double.infinity,
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("images/holy.jpg"), 
+            image: AssetImage("images/bg-hau.jpg"), 
             fit: BoxFit.cover,
           ),
         ),
@@ -59,6 +59,7 @@ class RegisterPage extends StatelessWidget {
                       controller: firstNameController,
                       hintText: 'First Name',
                       obscureText: false,
+                      maxLines: 1,
                     ),
 
                     const SizedBox(height: 10),
@@ -68,6 +69,7 @@ class RegisterPage extends StatelessWidget {
                       controller: lastNameController,
                       hintText: 'Last Name',
                       obscureText: false,
+                      maxLines: 1,
                     ),
 
                     const SizedBox(height: 10),
@@ -77,6 +79,7 @@ class RegisterPage extends StatelessWidget {
                       controller: emailController,
                       hintText: 'Hau Email',
                       obscureText: false,
+                      maxLines: 1,
                     ),
 
                     const SizedBox(height: 10),
@@ -86,6 +89,7 @@ class RegisterPage extends StatelessWidget {
                       controller: contactController,
                       hintText: 'Student Number',
                       obscureText: false,
+                      maxLines: 1,
                     ),
 
                     const SizedBox(height: 10),
@@ -95,6 +99,7 @@ class RegisterPage extends StatelessWidget {
                       controller: passwordController,
                       hintText: 'Password',
                       obscureText: true,
+                      maxLines: 1,
                     ),
 
                     const SizedBox(height: 10),
@@ -104,6 +109,7 @@ class RegisterPage extends StatelessWidget {
                       controller: confirmPasswordController,
                       hintText: 'Confirm Password',
                       obscureText: true,
+                      maxLines: 1,
                     ),
 
                     const SizedBox(height: 20),

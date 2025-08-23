@@ -1,25 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:lost_n_haund_client/components/my_textfield.dart';
 import 'package:lost_n_haund_client/components/header.dart';
+import 'package:lost_n_haund_client/components/my_textfield.dart';
 
-class ContactUsPage extends StatelessWidget {
+class ClaimForm extends StatelessWidget{
   final formKey = GlobalKey<FormState>();
 
-  // text controllers
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
   final emailController = TextEditingController();
   final contactController = TextEditingController();
-  final messageController = TextEditingController();
   final studentController = TextEditingController();
+  final claimController = TextEditingController();
 
-  ContactUsPage({super.key});
+  ClaimForm({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const PreferredSize(preferredSize: Size.fromHeight(75), child: Header()),
-
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
@@ -42,7 +40,7 @@ class ContactUsPage extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      "Contact Us",
+                      "Claim Form",
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 30,
@@ -50,6 +48,11 @@ class ContactUsPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 15),
+                    const Divider(
+                      color: Colors.white,   
+                      thickness: 2,         
+                    ),
+
 
                     // First Name
                     Row(
@@ -57,7 +60,7 @@ class ContactUsPage extends StatelessWidget {
                         Text(
                           "First Name:",
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -78,7 +81,7 @@ class ContactUsPage extends StatelessWidget {
                         Text(
                           "Last Name:",
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -99,7 +102,7 @@ class ContactUsPage extends StatelessWidget {
                         Text(
                           "Email",
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -120,7 +123,7 @@ class ContactUsPage extends StatelessWidget {
                         Text(
                           "Contact No.",
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -141,7 +144,7 @@ class ContactUsPage extends StatelessWidget {
                         Text(
                           "Student No.",
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -156,11 +159,50 @@ class ContactUsPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 15),
 
-                    // Message
+                    Row(
+                      children: [
+                        Text("Reference ID: ",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          ),
+                        )
+                      ],
+                    ),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF800000),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            side: const BorderSide(
+                              color: Colors.white,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        onPressed: () {
+                          if (formKey.currentState!.validate()) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Photo Uploaded!")),
+                            );
+                          }
+                        },
+                        child: const Text("Upload Photo"),
+                      ),
+                    ),
+                    const Divider(
+                      color: Colors.white,   
+                      thickness: 2,         
+                    ),
+
                     Row(
                       children: [
                         Text(
-                          "Message:",
+                          "Claim Justification:",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -170,8 +212,8 @@ class ContactUsPage extends StatelessWidget {
                       ],
                     ),
                     MyTextfield(
-                      controller: messageController,
-                      hintText: 'Message',
+                      controller: claimController,
+                      hintText: 'Insert Claim here',
                       maxLines: 5,
                     ),
                     const SizedBox(height: 20),
