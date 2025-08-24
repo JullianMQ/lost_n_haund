@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:lost_n_haund_client/pages/claim_form_page.dart';
 import 'package:lost_n_haund_client/pages/contact_page.dart';
 import 'package:lost_n_haund_client/pages/about_us_page.dart';
+import 'package:lost_n_haund_client/pages/home_page.dart';
 
-// Custom Drawer
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
 
@@ -32,6 +32,17 @@ class CustomDrawer extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
+              buttonOption(
+                context,
+                "Home",
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                  );
+                },
+              ),
               buttonOption(
                 context,
                 "Claim Form",
