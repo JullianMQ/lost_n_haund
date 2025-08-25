@@ -1,9 +1,10 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
-import { auth } from './utils/auth.js'
 import UserHandler from './handlers/userHandler.js'
 import PostHandler from './handlers/postHandler.js'
 import UserAuth from './handlers/userAuthHandlers.js'
+import { auth } from './utils/auth.js'
+import { Resend } from 'resend'
 
 export const app = new Hono()
 const u = new UserHandler()
@@ -27,9 +28,6 @@ app.get('/users', async (c) => {
   }
 })
 
-// TODO: keep for when next refactor comes, just need to mount the handlers
-// app.on(["POST", "GET"], "/users/auth/**", (c) => auth.handler(c.req.raw))
-
 app.post('/users/auth/sign-up/email', async (c) => {
   const res = await a.signUp(c)
   c.status(res.status)
@@ -51,6 +49,35 @@ app.post('/users/auth/sign-in/email', async (c) => {
 
   return c.json(res.success)
 })
+
+app.get('/users/auth/verify-email', async (c) => {
+  const name = c.req.query('user_name') ?? ""
+  const email = c.req.query('user_email') ?? ""
+  const [firstName, lastName = ''] = String(name).split(' ')
+  const token = c.req.query('token') ?? ""
+  const callbackURL = c.req.query('callback') ?? "/"
+  const audienceId = '1c5c7e1e-0835-47ce-b903-9ad11db9e206'
+  const resend = new Resend(process.env.API_TOKEN)
+  const res = await auth.api.verifyEmail({
+    query: { token, callbackURL },
+    asResponse: true
+  })
+
+  if (res.status === 200 || res.status === 302) {
+    resend.contacts.create({
+      audienceId,
+      email,
+      unsubscribed: false,
+      firstName,
+      lastName,
+    })
+  }
+
+  return c.json({ message: "Successfully verified your account" })
+})
+
+// TODO: keep for when next refactor comes, just need to mount the handlers
+app.on(["POST", "GET"], "/users/auth/**", (c) => auth.handler(c.req.raw))
 
 app.get('/posts', async (c) => {
   const posts = await p.getPosts(c)
