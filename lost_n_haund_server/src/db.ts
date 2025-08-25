@@ -1,16 +1,10 @@
-import { MongoClient, ServerApiVersion } from 'mongodb';
+import { MongoClient } from 'mongodb';
 import "dotenv/config"
 
 const uri = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@lostnhaund.o9effwu.mongodb.net/?retryWrites=true&w=majority&appName=LostnHAUnd`
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-export const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
-});
+const client = new MongoClient(uri);
+const db = client.db('lost_n_haund')
 
 export async function run() {
   try {
@@ -21,9 +15,11 @@ export async function run() {
     const movie = await movies.findOne(query)
 
     console.log(movie)
-  } finally {
-    // Ensures that the client will close when you finish/error
-    await client.close();
+    return movie
+
+  } catch (e) {
+    console.error("Error", e)
   }
 }
-run().catch(console.dir);
+
+export default db
