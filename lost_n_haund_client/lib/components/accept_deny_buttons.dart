@@ -15,7 +15,6 @@ class AcceptDenyButtons extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        // ACCEPT BUTTON
         ElevatedButton.icon(
           onPressed: onAccept,
           label: const Text("Accept", style: TextStyle(color: Colors.white),),
@@ -32,7 +31,6 @@ class AcceptDenyButtons extends StatelessWidget {
           ),
         ),
 
-        // DENY BUTTON
         ElevatedButton.icon(
           onPressed: onDeny,
           label: const Text("Deny", style: TextStyle(color: Colors.white),),

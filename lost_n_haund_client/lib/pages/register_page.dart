@@ -1,21 +1,74 @@
 import 'package:flutter/material.dart';
 import 'package:lost_n_haund_client/components/my_button.dart';
 import 'package:lost_n_haund_client/components/my_textfield.dart';
+import 'package:lost_n_haund_client/services/post_service.dart';
 import 'package:lost_n_haund_client/pages/login_page.dart';
 
-class RegisterPage extends StatelessWidget {
-  RegisterPage({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
-  // text controllers
-  final firstNameController = TextEditingController();
-  final lastNameController = TextEditingController();
-  final emailController = TextEditingController();
-  final contactController = TextEditingController();
-  final passwordController = TextEditingController();
-  final confirmPasswordController = TextEditingController();
+  @override
+  State<RegisterPage> createState() => registerPageState();
+}
 
-  void registerUser() {
-    // TODO: Add registration logic
+
+class registerPageState extends State<RegisterPage> {
+    final firstNameController = TextEditingController();
+    final lastNameController = TextEditingController();
+    final emailController = TextEditingController();
+    final contactController = TextEditingController();
+    final passwordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+
+    final PostService postService = PostService();
+    bool isLoading = false;
+
+  Future<void> registerUser() async {
+    final firstName = firstNameController.text.trim();
+    final lastName = lastNameController.text.trim();
+    final email = emailController.text.trim();
+    final contact = contactController.text.trim();
+    final password = passwordController.text.trim();
+    final confirmPassword = confirmPasswordController.text.trim();
+
+    if (password != confirmPassword) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Passwords do not match")),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final response = await postService.createPost(
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        contact: contact,
+        password: password,
+      );
+
+      if (!mounted) return; 
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Successfully posted!")),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response.data["error"] ?? "Failed to post")),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
   }
 
   @override
@@ -115,10 +168,13 @@ class RegisterPage extends StatelessWidget {
                     const SizedBox(height: 20),
 
                     MyButton(
-                      onTap: registerUser,
+                      onTap: isLoading ? null : registerUser,
                     ),
-
-                    const SizedBox(height: 20),
+                    if (isLoading) const Padding(
+                      padding: EdgeInsets.all(10),
+                      child: CircularProgressIndicator(),
+                    ),
+                const SizedBox(height: 20),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
