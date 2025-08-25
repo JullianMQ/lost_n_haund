@@ -55,7 +55,8 @@ flutter:
   uses-material-design: true
 
   assets:
-    - images/holy.jpg
+    - images/bg-hau.jpg
+    - images/logo.jpg
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
