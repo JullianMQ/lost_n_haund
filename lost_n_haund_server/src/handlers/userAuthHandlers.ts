@@ -4,17 +4,25 @@ import { NewSuccess, NewError } from './../utils/success.js'
 import { resend, auth } from "../utils/auth.js";
 import { APIError } from "better-auth/api";
 import type { StatusCode } from "hono/utils/http-status";
+import UserHandler from "./userHandler.js";
 
+const u = new UserHandler()
 export default class UserAuth {
   async signUp(c: Context): Promise<HandlerResult> {
     const formData = await c.req.formData()
     const name = String(formData.get('user_name')!)
     const email = String(formData.get('user_email')!)
+    const user_id = String(formData.get('user_id')!)
     const pass = String(formData.get('user_pass')!)
+
+    /**
+     this is an optional parameter, not necessarily needed
+    */
+    const phone_num = String(formData.get('phone_num'))
     const [firstName, lastName = ''] = name.split(' ')
 
     try {
-      const res = await auth.api.signUpEmail({
+      await auth.api.signUpEmail({
         body: {
           name: name,
           email: email,
@@ -31,16 +39,14 @@ export default class UserAuth {
         audienceId,
       });
 
-      // const token = res.token
-      // const callbackURL = c.req.query('callback') ?? "http://localhost:3030"
-
-      // await auth.api.sendVerificationEmail({
-      //   body: {
-      //     email,
-      //     callbackURL
-      //   }
-      // })
-
+      const res = await u.signUpUser([name, email, user_id])
+      if (res.error) {
+        return {
+          error: NewError('Error in creating account'),
+          status: res.status
+        }        
+      }
+      
       return {
         success: NewSuccess('Successfully created account'),
         status: 201

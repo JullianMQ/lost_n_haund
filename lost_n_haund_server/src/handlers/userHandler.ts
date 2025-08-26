@@ -1,5 +1,5 @@
 import type { Context } from 'hono'
-import type { Success, CustomError } from './../utils/success.js'
+import type { Success, CustomError, HandlerResult } from './../utils/success.js'
 import { regexOrAll } from './../utils/regexUtil.js'
 import { NewSuccess, NewError } from './../utils/success.js'
 import { existsSync, mkdirSync, createReadStream } from 'fs'
@@ -11,6 +11,7 @@ import { zValidator } from '@hono/zod-validator'
 import { zodPostsSchema, nullPostsSchema, type postsSchema } from './../utils/postsTypes.js'
 import { localToUTC, phTime } from './../utils/dateTimeConversion.js'
 import db from './../db.js'
+import type { HandlerResponse } from 'hono/types'
 
 // TODO: Maybe there's a way to upload the file directly? than saving it first in the server
 // Although we could do more operations(checking, minify, conversion etc.)
@@ -30,6 +31,7 @@ const oauth2Client = new google.auth.OAuth2(
 
 oauth2Client.setCredentials({ refresh_token: REFRESH_TOKEN })
 const drive = google.drive({ version: 'v3', auth: oauth2Client })
+const usersDB = db.collection('users')
 
 class UserHandler {
   async getUsers(c: Context) {
@@ -37,7 +39,6 @@ class UserHandler {
     const user_name = c.req.query('name') || ''
     // const user_num = c.req.query('user_num') || ''
     const page = c.req.query('page') === undefined ? 0 : parseInt(c.req.query('page')!)
-    const usersDB = db.collection('users')
 
     try {
       // Used skip and limit pagination for now, as I don't think there's that much data
@@ -53,12 +54,46 @@ class UserHandler {
     }
   }
 
+  async signUpUser([user_name, user_email, user_id]: string[], phone_num?: string | undefined): Promise<HandlerResult> {
+    let success = NewSuccess("")
+    let error = NewError("")
+    try {
+      const res = await usersDB.insertOne({
+        user_name,
+        user_email,
+        phone_num,
+        user_id,
+        user_role: "Student"
+      })
+
+      if (!res.acknowledged) {
+        error = NewError('Error creating the user')
+        return {error, status: 503}
+      }
+
+      success = NewSuccess("Successfully created account")
+      return {success, status: 201}
+
+    } catch (e) {
+      if (e instanceof Error) {
+        error = NewError(e)
+        return {error, status: 500}
+      }
+
+      console.error("Unknown error:", e)
+      error = NewError(`Unknown Error ${e}`)
+      return {error, status: 500}
+    }
+  }
+
+
+
   async updateUser(c: Context) {
-    
+
   }
 
   async deleteUser(c: Context) {
-    
+
   }
 
   async upload(f: File): Promise<[Success, CustomError]> {
