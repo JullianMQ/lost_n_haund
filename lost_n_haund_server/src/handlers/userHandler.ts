@@ -53,6 +53,14 @@ class UserHandler {
     }
   }
 
+  async updateUser(c: Context) {
+    
+  }
+
+  async deleteUser(c: Context) {
+    
+  }
+
   async upload(f: File): Promise<[Success, CustomError]> {
     let [success, error] = [NewSuccess(""), NewError("")]
     const dirPath = path.join(__dirname, 'assets', 'images')

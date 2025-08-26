@@ -79,6 +79,19 @@ app.get('/users/auth/verify-email', async (c) => {
 // TODO: keep for when next refactor comes, just need to mount the handlers
 app.on(["POST", "GET"], "/users/auth/**", (c) => auth.handler(c.req.raw))
 
+// TODO: Implement updating of users only if they are the user
+// and if they are admins
+app.put('/users', async (c) => {
+  const formData = c.req.formData()
+  
+})
+
+// TODO: Implement deletion of users only if they are the user
+// and if they are admins
+app.delete('/users', async (c) => {
+  
+})
+
 app.get('/posts', async (c) => {
   const posts = await p.getPosts(c)
 
