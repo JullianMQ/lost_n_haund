@@ -17,6 +17,8 @@ export default class UserAuth {
 
     /**
      this is an optional parameter, not necessarily needed
+     because the application does not need the phone number
+     of the user for authentication but maybe admins in the school will need it?
     */
     const phone_num = String(formData.get('phone_num'))
     const [firstName, lastName = ''] = name.split(' ')

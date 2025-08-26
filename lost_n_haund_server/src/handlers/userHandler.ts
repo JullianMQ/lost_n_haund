@@ -68,28 +68,74 @@ class UserHandler {
 
       if (!res.acknowledged) {
         error = NewError('Error creating the user')
-        return {error, status: 503}
+        return { error, status: 503 }
       }
 
       success = NewSuccess("Successfully created account")
-      return {success, status: 201}
+      return { success, status: 201 }
 
     } catch (e) {
       if (e instanceof Error) {
         error = NewError(e)
-        return {error, status: 500}
+        return { error, status: 500 }
       }
 
       console.error("Unknown error:", e)
       error = NewError(`Unknown Error ${e}`)
-      return {error, status: 500}
+      return { error, status: 500 }
     }
   }
 
+  async updateUser(c: Context): Promise<HandlerResult> {
+    const formData = await c.req.formData()
+    const user_id = c.req.param("id")
 
+    const filter = { user_id: user_id }
+    const updateUserValues: Record<string, unknown> = {}
+    // TODO: Implement updating of user role
+    // const usersKeys = ["user_name", "phone_num", "user_role"]
+    const usersKeys = ["user_name", "phone_num"]
 
-  async updateUser(c: Context) {
+    for (const key of usersKeys) {
+      const value = formData.get(key)
+      // keeping this one for now
+      if (!value) { // not sure what's better, checking falsy values or specified ones
+        continue
+      }
+      updateUserValues[key] = value
+      // keep in case of change in the future
+      // if (value !== null && value !== undefined && value !== "") {
+      //   updateUserValues[key] = value
+      // }
+    }
 
+    if (Object.keys(updateUserValues).length === 0) {
+      return {
+        status: 400,
+        error: NewError('No valid values in the request')
+      }
+    }
+
+    try {
+      const update = { $set: updateUserValues }
+      const res = await usersDB.findOneAndUpdate(filter, update)
+      if (!res?._id) {
+        return {
+          status: 400,
+          error: NewError('No document with this id')
+        }
+      }
+    } catch(e) {
+      return {
+        status: 500,
+        error: NewError(String(e))
+      }
+    }
+
+    return {
+      status: 200,
+      success: NewSuccess('Successfully updated values')
+    }
   }
 
   async deleteUser(c: Context) {
