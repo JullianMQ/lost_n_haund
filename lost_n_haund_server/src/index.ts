@@ -95,13 +95,13 @@ app.put('/users/:id', async (c) => {
 // and if they are admins
 app.delete('/users/:id', async (c) => {
   const res = await u.deleteUser(c)
+  c.status(res.status)
+  
+  if (res.status >= 400 && res.status <= 511) { // supported error codes from hono
+    return c.json(res.error)
+  }
 
-  // c.status(res.status)
-  // return c.json({
-  //   success: res.success,
-  //   error: res.error,
-  //   status: res.status
-  // })
+  return c.json(res.success)
 })
 
 app.get('/posts', async (c) => {

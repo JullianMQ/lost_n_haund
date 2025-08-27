@@ -12,6 +12,7 @@ import { zodPostsSchema, nullPostsSchema, type postsSchema } from './../utils/po
 import { localToUTC, phTime } from './../utils/dateTimeConversion.js'
 import db from './../db.js'
 import { resend } from './../utils/auth.js';
+import { getSessionQuerySchema } from 'better-auth/api'
 
 // TODO: Maybe there's a way to upload the file directly? than saving it first in the server
 // Although we could do more operations(checking, minify, conversion etc.)
@@ -32,6 +33,7 @@ const oauth2Client = new google.auth.OAuth2(
 oauth2Client.setCredentials({ refresh_token: REFRESH_TOKEN })
 const drive = google.drive({ version: 'v3', auth: oauth2Client })
 const usersDB = db.collection('users')
+const audienceId = '1c5c7e1e-0835-47ce-b903-9ad11db9e206'
 
 class UserHandler {
   async getUsers(c: Context) {
@@ -88,22 +90,14 @@ class UserHandler {
 
   async updateUser(c: Context): Promise<HandlerResult> {
     const formData = await c.req.formData()
-    const email = formData.get('user_email')
     const user_id = c.req.param("id")
-
     const filter = { user_id: user_id }
+
     const updateUserValues: Record<string, unknown> = {}
     let [firstName, lastName]: string = ""
     // TODO: Implement updating of user role
     // const usersKeys = ["user_name", "phone_num", "user_role"]
     const usersKeys = ["user_name", "phone_num"]
-
-    if (!email) {
-      return {
-        status: 400,
-        error: NewError('Error need the email for updating')
-      }      
-    }
 
     for (const key of usersKeys) {
       const value = formData.get(key)
@@ -127,56 +121,94 @@ class UserHandler {
       }
     }
 
-    // resend update
     try {
-      const audienceId = '1c5c7e1e-0835-47ce-b903-9ad11db9e206'
-      const res = await resend.contacts.update({
-        email: String(email),
+      const res = await usersDB.findOne(filter)
+      if (!res) {
+        return {
+          status: 404,
+          error: NewError('User not found')
+        }
+      }
+
+      const resContacts = await resend.contacts.update({
+        email: res?.user_email,
         audienceId: audienceId,
         firstName: firstName,
         lastName: lastName
       })
-      if (res.error) {
-        console.error("Error:", res.error);
-        return {
-          status: 400, // defaulted to 400, other errors are our problem
-          error: NewError(`Error updating the user: ${res.error.message}`)
-        } 
-      }
-      console.log("Data:", res.data);
-      
-    } catch (e) {
-      return {
-        status: 503, // service might be unavailable
-        error: NewError(String(e))
-      }
-    }
 
-    // mongodb update
-    try {
-      const update = { $set: updateUserValues }
-      const res = await usersDB.findOneAndUpdate(filter, update)
-      if (!res?._id) {
+      if (resContacts.error !== null) {
         return {
-          status: 400,
-          error: NewError('No document with this id')
+          status: 503,
+          error: NewError(`Error deleting the user ${resContacts.error.message}`)
         }
       }
-    } catch(e) {
-      return {
-        status: 503, // service might be unavailable
-        error: NewError(String(e))
-      }
-    }
 
-    return {
-      status: 200,
-      success: NewSuccess('Successfully updated values')
+      const update = { $set: updateUserValues }
+      const resMongo = await usersDB.updateOne(filter, update)
+      if (!resMongo.acknowledged) {
+        return {
+          status: 503,
+          error: NewError(`Error deleting the user: MongoError`)
+        }
+      }
+
+      return {
+        status: 200,
+        success: NewSuccess("Update user successfully")
+      }
+    } catch (e) {
+      return {
+        status: 500,
+        error: NewError(`Error updating the user ${e}`)
+      }
     }
   }
 
-  async deleteUser(c: Context) {
+  async deleteUser(c: Context): Promise<HandlerResult> {
+    const user_id = c.req.param("id")
+    const filter = { user_id: user_id }
 
+    try {
+      const res = await usersDB.findOne(filter)
+      if (!res) {
+        return {
+          status: 404,
+          error: NewError('User not found')
+        }
+      }
+
+      const resContacts = await resend.contacts.remove({
+        email: res?.user_email,
+        audienceId: audienceId
+      })
+
+      if (resContacts.error !== null) {
+        return {
+          status: 503,
+          error: NewError(`Error deleting the user ${resContacts.error.message}`)
+        }
+      }
+
+      const resMongo = await usersDB.deleteOne(filter)
+      if (!resMongo.acknowledged) {
+        return {
+          status: 503,
+          error: NewError(`Error deleting the user: Mongo error`)
+        }
+      }
+
+      return {
+        status: 200,
+        success: NewSuccess('Successfully deleted account')
+      }
+    } catch (e) {
+      console.error(`Error: ${e}`);
+      return {
+        status: 500,
+        error: NewError('Error deleting account')
+      }
+    }
   }
 
   async upload(f: File): Promise<[Success, CustomError]> {
