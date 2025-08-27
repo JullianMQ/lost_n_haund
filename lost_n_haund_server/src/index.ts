@@ -2,13 +2,13 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import UserHandler from './handlers/userHandler.js'
 import PostHandler from './handlers/postHandler.js'
-import UserAuth from './handlers/userAuthHandlers.js'
+import UserAuthHandler from './handlers/userAuthHandlers.js'
 import { auth } from './utils/auth.js'
 import { Resend } from 'resend'
 
 export const app = new Hono()
 const u = new UserHandler()
-const a = new UserAuth()
+const a = new UserAuthHandler()
 const p = new PostHandler()
 
 app.get('/users', async (c) => {
@@ -81,9 +81,15 @@ app.on(["POST", "GET"], "/users/auth/**", (c) => auth.handler(c.req.raw))
 
 // TODO: Implement updating of users only if they are the user
 // and if they are admins
-app.put('/users', async (c) => {
-  const formData = c.req.formData()
-  
+app.put('/users/:id', async (c) => {
+  const res = await u.updateUser(c)
+  c.status(res.status)
+
+  if (res.status >= 400 && res.status <= 511) { // supported error codes from hono
+    return c.json(res.error)
+  }
+
+  return c.json(res.success)
 })
 
 // TODO: Implement deletion of users only if they are the user

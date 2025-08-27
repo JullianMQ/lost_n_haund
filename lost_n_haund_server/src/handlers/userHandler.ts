@@ -11,7 +11,7 @@ import { zValidator } from '@hono/zod-validator'
 import { zodPostsSchema, nullPostsSchema, type postsSchema } from './../utils/postsTypes.js'
 import { localToUTC, phTime } from './../utils/dateTimeConversion.js'
 import db from './../db.js'
-import type { HandlerResponse } from 'hono/types'
+import { resend } from './../utils/auth.js';
 
 // TODO: Maybe there's a way to upload the file directly? than saving it first in the server
 // Although we could do more operations(checking, minify, conversion etc.)
@@ -88,13 +88,22 @@ class UserHandler {
 
   async updateUser(c: Context): Promise<HandlerResult> {
     const formData = await c.req.formData()
+    const email = formData.get('user_email')
     const user_id = c.req.param("id")
 
     const filter = { user_id: user_id }
     const updateUserValues: Record<string, unknown> = {}
+    let [firstName, lastName]: string = ""
     // TODO: Implement updating of user role
     // const usersKeys = ["user_name", "phone_num", "user_role"]
     const usersKeys = ["user_name", "phone_num"]
+
+    if (!email) {
+      return {
+        status: 400,
+        error: NewError('Error need the email for updating')
+      }      
+    }
 
     for (const key of usersKeys) {
       const value = formData.get(key)
@@ -103,6 +112,8 @@ class UserHandler {
         continue
       }
       updateUserValues[key] = value
+      firstName = String(updateUserValues["user_name"]).split(' ')[0]
+      lastName = String(updateUserValues["user_name"]).split(' ')[1] || ""
       // keep in case of change in the future
       // if (value !== null && value !== undefined && value !== "") {
       //   updateUserValues[key] = value
@@ -116,6 +127,32 @@ class UserHandler {
       }
     }
 
+    // resend update
+    try {
+      const audienceId = '1c5c7e1e-0835-47ce-b903-9ad11db9e206'
+      const res = await resend.contacts.update({
+        email: String(email),
+        audienceId: audienceId,
+        firstName: firstName,
+        lastName: lastName
+      })
+      if (res.error) {
+        console.error("Error:", res.error);
+        return {
+          status: 400, // defaulted to 400, other errors are our problem
+          error: NewError(`Error updating the user: ${res.error.message}`)
+        } 
+      }
+      console.log("Data:", res.data);
+      
+    } catch (e) {
+      return {
+        status: 503, // service might be unavailable
+        error: NewError(String(e))
+      }
+    }
+
+    // mongodb update
     try {
       const update = { $set: updateUserValues }
       const res = await usersDB.findOneAndUpdate(filter, update)
@@ -127,7 +164,7 @@ class UserHandler {
       }
     } catch(e) {
       return {
-        status: 500,
+        status: 503, // service might be unavailable
         error: NewError(String(e))
       }
     }

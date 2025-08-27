@@ -7,7 +7,7 @@ import type { StatusCode } from "hono/utils/http-status";
 import UserHandler from "./userHandler.js";
 
 const u = new UserHandler()
-export default class UserAuth {
+export default class UserAuthHandler {
   async signUp(c: Context): Promise<HandlerResult> {
     const formData = await c.req.formData()
     const name = String(formData.get('user_name')!)
@@ -16,9 +16,9 @@ export default class UserAuth {
     const pass = String(formData.get('user_pass')!)
 
     /**
-     this is an optional parameter, not necessarily needed
-     because the application does not need the phone number
-     of the user for authentication but maybe admins in the school will need it?
+     this is an optional parameter, not necessarily needed because the
+     application does not need the phone number of the user for authentication
+     but maybe admins in the school will need it?
     */
     const phone_num = String(formData.get('phone_num'))
     const [firstName, lastName = ''] = name.split(' ')
