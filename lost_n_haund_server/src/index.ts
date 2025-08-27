@@ -76,7 +76,6 @@ app.get('/users/auth/verify-email', async (c) => {
   return c.json({ message: "Successfully verified your account" })
 })
 
-// TODO: keep for when next refactor comes, just need to mount the handlers
 app.on(["POST", "GET"], "/users/auth/**", (c) => auth.handler(c.req.raw))
 
 // TODO: Implement updating of users only if they are the user
@@ -94,68 +93,56 @@ app.put('/users/:id', async (c) => {
 
 // TODO: Implement deletion of users only if they are the user
 // and if they are admins
-app.delete('/users', async (c) => {
-  
+app.delete('/users/:id', async (c) => {
+  const res = await u.deleteUser(c)
+
+  // c.status(res.status)
+  // return c.json({
+  //   success: res.success,
+  //   error: res.error,
+  //   status: res.status
+  // })
 })
 
 app.get('/posts', async (c) => {
-  const posts = await p.getPosts(c)
-
-  return c.json(posts)
+  try {
+    const posts = await p.getPosts(c)
+    return c.json(posts)
+  } catch (e) {
+    console.error(`Unexpected error ${e}`);
+    return c.json({ error: "Internal server error" }, 500)
+  }
 })
 
 app.post('/posts', async (c) => {
   const res = await p.postPosts(c)
-  if (res.status === 400) {
-    c.status(res.status)
-    return c.json(res.error)
-  }
-
-  if (res.status === 500) {
-    c.status(res.status)
-    return c.json(res.error)
-  }
-
   c.status(res.status)
+  if (res.status >= 400 && res.status <= 511) { // supported error codes from hono
+    c.json(res.error)
+  }
+
   return c.json(res.success)
 })
 
 app.put('/posts/:id', async (c) => {
   const res = await p.updatePost(c)
-
-  if (res.status === 400) {
-    c.status(res.status)
-    return c.json(res.error)
-  }
-
-  if (res.status === 500) {
-    c.status(res.status)
-    return c.json(res.error)
-  }
-
   c.status(res.status)
+
+  if (res.status >= 400 && res.status <= 511) { // supported error codes from hono
+    c.json(res.error)
+  }
+
   return c.json(res.success)
 })
 
 app.delete('/posts/:id', async (c) => {
   const res = await p.deletePost(c)
-
-  if (res.status === 404) {
-    c.status(res.status)
-    return c.json(res.error)
-  }
-
-  if (res.status === 503) {
-    c.status(res.status)
-    return c.json(res.error)
-  }
-
-  if (res.status === 500) {
-    c.status(res.status)
-    return c.json(res.error)
-  }
-
   c.status(res.status)
+
+  if (res.status >= 400 && res.status <= 511) { // supported error codes from hono
+    c.json(res.error)
+  }
+
   return c.json(res.success)
 })
 
