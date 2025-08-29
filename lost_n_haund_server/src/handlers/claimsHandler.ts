@@ -3,6 +3,7 @@ import db from "../db.js"
 import { NewError, NewSuccess, type HandlerResult } from "../utils/success.js"
 import { zodClaimSchema } from "../utils/claimsTypes.js"
 import { regexOrAll } from "../utils/regexUtil.js"
+import { ObjectId } from "mongodb"
 
 
 class ClaimsHandler {
@@ -88,6 +89,45 @@ class ClaimsHandler {
       return {
         status: 500,
         error: NewError(`Error creating claim item post ${e}`)
+      }
+    }
+  }
+
+  async deleteClaimPost(c: Context): Promise<HandlerResult> {
+    try {
+      if (!ObjectId.isValid(c.req.param("id"))) { // validate first if id is of correct type
+        return {
+          status: 400,
+          error: "Error inputted id is incorrect, should be 24 characters"
+        }        
+      }
+
+      const claim_id = new ObjectId(c.req.param("id")) // to not throw an error here
+      const res = await this.claimsDB.findOne({ _id: claim_id })
+      if (!res) {
+        console.log(res)
+        return {
+          status: 404,
+          error: NewError("No claim with this id")
+        }
+      }
+
+      const resDelete = await this.claimsDB.deleteOne({ _id: claim_id })
+      if (!resDelete.acknowledged) {
+        return {
+          status: 503,
+          error: NewError("MongoDB Error")
+        }
+      }
+      return {
+        status: 200,
+        success: NewSuccess("Successfully delete claim post")
+      }
+
+    } catch (e) {
+      return {
+        status: 500,
+        error: NewError(`Error deleting claim post: ${e}`)
       }
     }
   }

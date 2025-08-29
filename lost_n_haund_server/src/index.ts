@@ -146,6 +146,16 @@ app.post('/claims', async (c) => {
   return c.json(res.success)
 })
 
+app.delete('/claims/:id', async (c) => {
+  const res = await cl.deleteClaimPost(c)
+  c.status(res.status)
+  if (res.status >= 400 && res.status <= 511) { // supported error codes from hono
+    return c.json(res.error)
+  }
+
+  return c.json(res.success)
+})
+
 app.put('/posts/:id', async (c) => {
   const res = await p.updateItemPost(c)
   c.status(res.status)

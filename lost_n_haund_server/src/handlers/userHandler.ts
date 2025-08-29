@@ -37,7 +37,6 @@ const audienceId = '1c5c7e1e-0835-47ce-b903-9ad11db9e206'
 
 class UserHandler {
   async getUsers(c: Context) {
-    // TODO: Add ways to search by stud_id, email etc.
     const user_name = c.req.query('name') || ''
     const user_email = c.req.query('user_email') || ''
     const user_id = c.req.query('user_id') || ''
@@ -264,11 +263,9 @@ class UserHandler {
       return [success, error]
 
     } catch (e) {
-      if (e instanceof Error) {
-        console.error('Service unavailable: ', e)
-        const err = NewError(String(e))
-        return [success, err]
-      }
+      console.error('Service unavailable: ', e)
+      const err = NewError(String(e))
+      return [success, err]
     }
   }
 }
