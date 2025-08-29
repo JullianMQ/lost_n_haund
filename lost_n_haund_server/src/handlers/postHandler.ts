@@ -8,10 +8,10 @@ import { localToUTC, phTime } from './../utils/dateTimeConversion.js'
 import db from './../db.js'
 
 
-class PostHandler {
+class ItemPostHandler {
   private postsDB = db.collection('posts')
 
-  async getPosts(c: Context) {
+  async getItems(c: Context) {
     const item_name = c.req.query('name') || ''
     const description = c.req.query('description') || ''
     const location_found = c.req.query('location') || ''
@@ -40,14 +40,10 @@ class PostHandler {
 
     } catch (e) {
       console.error("Error", e);
-      return {
-        status: 500,
-        error: NewError('Internal server error')
-      }
     }
   }
 
-  async postPosts(c: Context): Promise<HandlerResult> {
+  async createLostItemPost(c: Context): Promise<HandlerResult> {
     const formData = await c.req.formData()
 
     try {
@@ -93,7 +89,7 @@ class PostHandler {
     }
   }
 
-  async updatePost(c: Context): Promise<HandlerResult> {
+  async updateItemPost(c: Context): Promise<HandlerResult> {
     const id = c.req.param('id')
 
     try {
@@ -186,7 +182,6 @@ class PostHandler {
       }
     }
   }
-
 }
 
-export default PostHandler
+export default ItemPostHandler

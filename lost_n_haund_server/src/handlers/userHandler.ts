@@ -266,13 +266,9 @@ class UserHandler {
     } catch (e) {
       if (e instanceof Error) {
         console.error('Service unavailable: ', e)
-        const err = NewError(e)
+        const err = NewError(String(e))
         return [success, err]
       }
-
-      // basically useless, but needed in case we throw errors that are not Error objects
-      const err = NewError(String(e))
-      return [success, err]
     }
   }
 }

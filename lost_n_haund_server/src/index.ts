@@ -1,15 +1,17 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import UserHandler from './handlers/userHandler.js'
-import PostHandler from './handlers/postHandler.js'
+import ItemPostHandler from './handlers/postHandler.js'
 import UserAuthHandler from './handlers/userAuthHandlers.js'
+import ClaimsHandler from './handlers/claimsHandler.js'
 import { auth } from './utils/auth.js'
 import { Resend } from 'resend'
 
 export const app = new Hono()
 const u = new UserHandler()
 const a = new UserAuthHandler()
-const p = new PostHandler()
+const p = new ItemPostHandler()
+const cl = new ClaimsHandler()
 
 app.get('/users', async (c) => {
   try {
@@ -96,7 +98,7 @@ app.put('/users/:id', async (c) => {
 app.delete('/users/:id', async (c) => {
   const res = await u.deleteUser(c)
   c.status(res.status)
-  
+
   if (res.status >= 400 && res.status <= 511) { // supported error codes from hono
     return c.json(res.error)
   }
@@ -106,7 +108,7 @@ app.delete('/users/:id', async (c) => {
 
 app.get('/posts', async (c) => {
   try {
-    const posts = await p.getPosts(c)
+    const posts = await p.getItems(c)
     return c.json(posts)
   } catch (e) {
     console.error(`Unexpected error ${e}`);
@@ -115,21 +117,41 @@ app.get('/posts', async (c) => {
 })
 
 app.post('/posts', async (c) => {
-  const res = await p.postPosts(c)
+  const res = await p.createLostItemPost(c)
   c.status(res.status)
   if (res.status >= 400 && res.status <= 511) { // supported error codes from hono
-    c.json(res.error)
+    return c.json(res.error)
+  }
+
+  return c.json(res.success)
+})
+
+app.get('/claims', async (c) => {
+  try {
+    const claims = await cl.getClaimPosts(c)
+    return c.json(claims)
+  } catch (e) {
+    console.error(`Unexpected error ${e}`);
+    return c.json({ error: "Internal server error" }, 500)
+  }
+})
+
+app.post('/claims', async (c) => {
+  const res = await cl.createClaimItemPost(c)
+  c.status(res.status)
+  if (res.status >= 400 && res.status <= 511) { // supported error codes from hono
+    return c.json(res.error)
   }
 
   return c.json(res.success)
 })
 
 app.put('/posts/:id', async (c) => {
-  const res = await p.updatePost(c)
+  const res = await p.updateItemPost(c)
   c.status(res.status)
 
   if (res.status >= 400 && res.status <= 511) { // supported error codes from hono
-    c.json(res.error)
+    return c.json(res.error)
   }
 
   return c.json(res.success)
@@ -140,15 +162,10 @@ app.delete('/posts/:id', async (c) => {
   c.status(res.status)
 
   if (res.status >= 400 && res.status <= 511) { // supported error codes from hono
-    c.json(res.error)
+    return c.json(res.error)
   }
 
   return c.json(res.success)
-})
-
-app.get('/upload', async (c) => {
-  c.status(200)
-  return c.json("Upload path works")
 })
 
 app.post('/upload', async (c) => {

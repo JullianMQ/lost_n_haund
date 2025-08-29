@@ -23,6 +23,22 @@ export default class UserAuthHandler {
     const phone_num = String(formData.get('phone_num'))
     const [firstName, lastName = ''] = name.split(' ')
 
+    // TODO: CREATE ZOD SCHEMA FOR VALIDATION
+    try {
+      const rawData = {
+        firstName: formData.get("first_name") as string,
+        lastName: formData.get("last_name") as string,
+        email: formData.get("user_email") as string,
+        phone_num: formData.get("phone_num") as string,
+        user_id: formData.get("user_id") as string,
+        reference_id: formData.get("reference_id") as string,
+        justification: formData.get("justification") as string,
+      }
+
+    } catch (e) {
+      
+    }
+
     try {
       await auth.api.signUpEmail({
         body: {
