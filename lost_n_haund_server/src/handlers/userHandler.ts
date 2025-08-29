@@ -39,18 +39,27 @@ class UserHandler {
   async getUsers(c: Context) {
     // TODO: Add ways to search by stud_id, email etc.
     const user_name = c.req.query('name') || ''
-    // const user_num = c.req.query('user_num') || ''
+    const user_email = c.req.query('user_email') || ''
+    const user_id = c.req.query('user_id') || ''
+    const phone_num = c.req.query('phone_num') || ''
+    const user_role = c.req.query('user_role') || ''
     const page = c.req.query('page') === undefined ? 0 : parseInt(c.req.query('page')!)
 
     try {
       // Used skip and limit pagination for now, as I don't think there's that much data
       // const query = { name: {$regex: /john .*/i} }
       const query = {
-        user_name: new RegExp(`^${user_name}`, 'i')
+        $and: [
+          { user_name: regexOrAll(user_name) },
+          { user_id: regexOrAll(user_id) },
+          { user_email: regexOrAll(user_email) },
+          { phone_num: regexOrAll(phone_num) },
+          { user_role: regexOrAll(user_role) },
+        ]
       }
       const users = await usersDB.find(query).skip(page).limit(20).toArray()
-
       return users
+
     } catch (e) {
       console.error("Error", e)
     }
