@@ -6,18 +6,12 @@ import { zValidator } from '@hono/zod-validator'
 import { zodPostsSchema } from './../utils/postsTypes.js'
 import { localToUTC, phTime } from './../utils/dateTimeConversion.js'
 import db from './../db.js'
-// TODO: pass an object to get both keys and value
-// as a way to filter
-// queryFunc(object) {
-//   [...args].forEach(element => {
-//     if (element === "" || element.length === 0) {
-//
-//     }
-//   });
-// }
 
-class PostHandler {
-  async getPosts(c: Context) {
+
+class ItemPostHandler {
+  private postsDB = db.collection('posts')
+
+  async getItems(c: Context) {
     const item_name = c.req.query('name') || ''
     const description = c.req.query('description') || ''
     const location_found = c.req.query('location') || ''
@@ -25,7 +19,6 @@ class PostHandler {
     const reference_id = c.req.query('reference_id') || ''
     const item_category = c.req.queries('categories') || []
     const page = c.req.query('page') === undefined ? 0 : parseInt(c.req.query('page')!)
-    const postsDB = db.collection('posts')
 
     try {
       const query = {
@@ -42,7 +35,7 @@ class PostHandler {
           },
         ]
       }
-      const posts = await postsDB.find(query).skip(page).limit(20).toArray()
+      const posts = await this.postsDB.find(query).skip(page).limit(20).toArray()
       return posts
 
     } catch (e) {
@@ -50,9 +43,8 @@ class PostHandler {
     }
   }
 
-  async postPosts(c: Context): Promise<HandlerResult> {
+  async createLostItemPost(c: Context): Promise<HandlerResult> {
     const formData = await c.req.formData()
-    const postsDB = db.collection('posts')
 
     try {
       const rawData = {
@@ -74,7 +66,7 @@ class PostHandler {
         }
       }
 
-      const postResult = await postsDB.insertOne(res.data)
+      const postResult = await this.postsDB.insertOne(res.data)
       if (!postResult.acknowledged) {
         return {
           error: NewError('Mongo error'),
@@ -97,8 +89,7 @@ class PostHandler {
     }
   }
 
-  async updatePost(c: Context): Promise<HandlerResult> {
-    const postsDB = db.collection('posts')
+  async updateItemPost(c: Context): Promise<HandlerResult> {
     const id = c.req.param('id')
 
     try {
@@ -129,7 +120,7 @@ class PostHandler {
         }
       }
 
-      const updateResult = await postsDB.updateOne(
+      const updateResult = await this.postsDB.updateOne(
         { reference_id: id },
         { $set: updatedData }
       )
@@ -157,11 +148,10 @@ class PostHandler {
   }
 
   async deletePost(c: Context): Promise<HandlerResult> {
-    const postsDB = db.collection('posts')
     const postID = c.req.param('id')
 
     try {
-      const res = await postsDB.deleteOne(
+      const res = await this.postsDB.deleteOne(
         { reference_id: postID }
       )
 
@@ -194,4 +184,4 @@ class PostHandler {
   }
 }
 
-export default PostHandler
+export default ItemPostHandler

@@ -16,6 +16,7 @@ node_modules/
 .env.production
 *lock.yaml
 *lock.json
+Session.vim
 
 # logs
 logs/

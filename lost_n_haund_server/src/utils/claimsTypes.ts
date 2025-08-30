@@ -1,0 +1,11 @@
+import z from "zod"
+
+export const zodClaimSchema = z.object({
+  first_name: z.string().min(2),
+  last_name: z.string().min(2),
+  user_email: z.email(),
+  phone_num: z.coerce.string().regex(/^09\d{9}$/),
+  user_id: z.string().regex(/^\d{8}$/),
+  reference_id: z.string(),
+  justification: z.string().max(400).min(50),
+})

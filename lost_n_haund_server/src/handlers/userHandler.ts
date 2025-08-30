@@ -1,5 +1,5 @@
 import type { Context } from 'hono'
-import type { Success, CustomError } from './../utils/success.js'
+import type { Success, CustomError, HandlerResult } from './../utils/success.js'
 import { regexOrAll } from './../utils/regexUtil.js'
 import { NewSuccess, NewError } from './../utils/success.js'
 import { existsSync, mkdirSync, createReadStream } from 'fs'
@@ -11,6 +11,8 @@ import { zValidator } from '@hono/zod-validator'
 import { zodPostsSchema, nullPostsSchema, type postsSchema } from './../utils/postsTypes.js'
 import { localToUTC, phTime } from './../utils/dateTimeConversion.js'
 import db from './../db.js'
+import { resend } from './../utils/auth.js';
+import { getSessionQuerySchema } from 'better-auth/api'
 
 // TODO: Maybe there's a way to upload the file directly? than saving it first in the server
 // Although we could do more operations(checking, minify, conversion etc.)
@@ -30,26 +32,190 @@ const oauth2Client = new google.auth.OAuth2(
 
 oauth2Client.setCredentials({ refresh_token: REFRESH_TOKEN })
 const drive = google.drive({ version: 'v3', auth: oauth2Client })
+const usersDB = db.collection('users')
+const audienceId = '1c5c7e1e-0835-47ce-b903-9ad11db9e206'
 
 class UserHandler {
   async getUsers(c: Context) {
-    // TODO: Add ways to search by stud_id, email etc.
     const user_name = c.req.query('name') || ''
-    // const user_num = c.req.query('user_num') || ''
+    const user_email = c.req.query('user_email') || ''
+    const user_id = c.req.query('user_id') || ''
+    const phone_num = c.req.query('phone_num') || ''
+    const user_role = c.req.query('user_role') || ''
     const page = c.req.query('page') === undefined ? 0 : parseInt(c.req.query('page')!)
-    const usersDB = db.collection('users')
 
     try {
       // Used skip and limit pagination for now, as I don't think there's that much data
       // const query = { name: {$regex: /john .*/i} }
       const query = {
-        user_name: new RegExp(`^${user_name}`, 'i')
+        $and: [
+          { user_name: regexOrAll(user_name) },
+          { user_id: regexOrAll(user_id) },
+          { user_email: regexOrAll(user_email) },
+          { phone_num: regexOrAll(phone_num) },
+          { user_role: regexOrAll(user_role) },
+        ]
       }
       const users = await usersDB.find(query).skip(page).limit(20).toArray()
-
       return users
+
     } catch (e) {
       console.error("Error", e)
+    }
+  }
+
+  async signUpUser([user_name, user_email, user_id]: string[], phone_num?: string | undefined): Promise<HandlerResult> {
+    let success = NewSuccess("")
+    let error = NewError("")
+    try {
+      const res = await usersDB.insertOne({
+        user_name,
+        user_email,
+        phone_num,
+        user_id,
+        user_role: "Student"
+      })
+
+      if (!res.acknowledged) {
+        error = NewError('Error creating the user')
+        return { error, status: 503 }
+      }
+
+      success = NewSuccess("Successfully created account")
+      return { success, status: 201 }
+
+    } catch (e) {
+      if (e instanceof Error) {
+        error = NewError(e)
+        return { error, status: 500 }
+      }
+
+      console.error("Unknown error:", e)
+      error = NewError(`Unknown Error ${e}`)
+      return { error, status: 500 }
+    }
+  }
+
+  async updateUser(c: Context): Promise<HandlerResult> {
+    const formData = await c.req.formData()
+    const user_id = c.req.param("id")
+    const filter = { user_id: user_id }
+
+    const updateUserValues: Record<string, unknown> = {}
+    let [firstName, lastName]: string = ""
+    // TODO: Implement updating of user role
+    // const usersKeys = ["user_name", "phone_num", "user_role"]
+    const usersKeys = ["user_name", "phone_num"]
+
+    for (const key of usersKeys) {
+      const value = formData.get(key)
+      // keeping this one for now
+      if (!value) { // not sure what's better, checking falsy values or specified ones
+        continue
+      }
+      updateUserValues[key] = value
+      firstName = String(updateUserValues["user_name"]).split(' ')[0]
+      lastName = String(updateUserValues["user_name"]).split(' ')[1] || ""
+      // keep in case of change in the future
+      // if (value !== null && value !== undefined && value !== "") {
+      //   updateUserValues[key] = value
+      // }
+    }
+
+    if (Object.keys(updateUserValues).length === 0) {
+      return {
+        status: 400,
+        error: NewError('No valid values in the request')
+      }
+    }
+
+    try {
+      const res = await usersDB.findOne(filter)
+      if (!res) {
+        return {
+          status: 404,
+          error: NewError('User not found')
+        }
+      }
+
+      const resContacts = await resend.contacts.update({
+        email: res?.user_email,
+        audienceId: audienceId,
+        firstName: firstName,
+        lastName: lastName
+      })
+
+      if (resContacts.error !== null) {
+        return {
+          status: 503,
+          error: NewError(`Error deleting the user ${resContacts.error.message}`)
+        }
+      }
+
+      const update = { $set: updateUserValues }
+      const resMongo = await usersDB.updateOne(filter, update)
+      if (!resMongo.acknowledged) {
+        return {
+          status: 503,
+          error: NewError(`Error deleting the user: MongoError`)
+        }
+      }
+
+      return {
+        status: 200,
+        success: NewSuccess("Update user successfully")
+      }
+    } catch (e) {
+      return {
+        status: 500,
+        error: NewError(`Error updating the user ${e}`)
+      }
+    }
+  }
+
+  async deleteUser(c: Context): Promise<HandlerResult> {
+    const user_id = c.req.param("id")
+    const filter = { user_id: user_id }
+
+    try {
+      const res = await usersDB.findOne(filter)
+      if (!res) {
+        return {
+          status: 404,
+          error: NewError('User not found')
+        }
+      }
+
+      const resContacts = await resend.contacts.remove({
+        email: res?.user_email,
+        audienceId: audienceId
+      })
+
+      if (resContacts.error !== null) {
+        return {
+          status: 503,
+          error: NewError(`Error deleting the user ${resContacts.error.message}`)
+        }
+      }
+
+      const resMongo = await usersDB.deleteOne(filter)
+      if (!resMongo.acknowledged) {
+        return {
+          status: 503,
+          error: NewError(`Error deleting the user: Mongo error`)
+        }
+      }
+
+      return {
+        status: 200,
+        success: NewSuccess('Successfully deleted account')
+      }
+    } catch (e) {
+      console.error(`Error: ${e}`);
+      return {
+        status: 500,
+        error: NewError('Error deleting account')
+      }
     }
   }
 
@@ -97,13 +263,7 @@ class UserHandler {
       return [success, error]
 
     } catch (e) {
-      if (e instanceof Error) {
-        console.error('Service unavailable: ', e)
-        const err = NewError(e)
-        return [success, err]
-      }
-
-      // basically useless, but needed in case we throw errors that are not Error objects
+      console.error('Service unavailable: ', e)
       const err = NewError(String(e))
       return [success, err]
     }
