@@ -42,7 +42,7 @@ class registerPageState extends State<RegisterPage> {
     setState(() => isLoading = true);
 
     try {
-      final response = await postService.createPost(
+      final response = await postService.registerUser(
         firstName: firstName,
         lastName: lastName,
         email: email,

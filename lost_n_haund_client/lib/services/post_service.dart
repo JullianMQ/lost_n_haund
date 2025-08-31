@@ -4,7 +4,7 @@ import 'package:lost_n_haund_client/config/api_config.dart';
 class PostService {
   final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: ApiConfig.androidEmulatorUrl,
+      baseUrl: ApiConfig.androidEmulatorUrl, 
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       headers: {
@@ -13,7 +13,7 @@ class PostService {
     ),
   );
 
-  Future<Response> createPost({
+  Future<Response> registerUser({
     required String firstName,
     required String lastName,
     required String email,
@@ -22,7 +22,7 @@ class PostService {
   }) async {
     try {
       final response = await _dio.post(
-        "/posts",  
+        "/register", // ✅ update to your backend’s register endpoint
         data: {
           "firstName": firstName,
           "lastName": lastName,
