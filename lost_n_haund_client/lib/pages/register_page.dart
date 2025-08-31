@@ -17,6 +17,7 @@ class registerPageState extends State<RegisterPage> {
     final lastNameController = TextEditingController();
     final emailController = TextEditingController();
     final contactController = TextEditingController();
+    final studentIdController = TextEditingController();
     final passwordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
 
@@ -28,6 +29,7 @@ class registerPageState extends State<RegisterPage> {
     final lastName = lastNameController.text.trim();
     final email = emailController.text.trim();
     final contact = contactController.text.trim();
+    final studentId = studentIdController.text.trim();
     final password = passwordController.text.trim();
     final confirmPassword = confirmPasswordController.text.trim();
 
@@ -46,6 +48,7 @@ class registerPageState extends State<RegisterPage> {
         firstName: firstName,
         lastName: lastName,
         email: email,
+        studentId: studentId,
         contact: contact,
         password: password,
       );
@@ -58,7 +61,8 @@ class registerPageState extends State<RegisterPage> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response.data["error"] ?? "Failed to post")),
+          SnackBar(content: Text((response.data is Map ? response.data["error"] : response.data.toString()) ?? "Failed to post")),
+
         );
       }
     } catch (e) {
@@ -140,7 +144,17 @@ class registerPageState extends State<RegisterPage> {
                     // Contact
                     MyTextfield(
                       controller: contactController,
-                      hintText: 'Student Number',
+                      hintText: 'Contact No. (Optional)',
+                      obscureText: false,
+                      maxLines: 1,
+                    ),
+
+                    const SizedBox(height: 10),
+
+                     // Student/Employee ID
+                    MyTextfield(
+                      controller: studentIdController,
+                      hintText: 'Student/Employee ID',
                       obscureText: false,
                       maxLines: 1,
                     ),

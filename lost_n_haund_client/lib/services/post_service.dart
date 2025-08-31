@@ -18,19 +18,23 @@ class PostService {
     required String lastName,
     required String email,
     required String contact,
+    required String studentId,
     required String password,
   }) async {
     try {
+      final formData = FormData.fromMap({
+        "user_name": "$firstName $lastName",
+        "user_email": email,
+        "phone_num": contact,
+        "user_id": studentId,
+        "user_pass": password,
+      });
+
       final response = await _dio.post(
-        "/register", // ✅ update to your backend’s register endpoint
-        data: {
-          "firstName": firstName,
-          "lastName": lastName,
-          "email": email,
-          "contact": contact,
-          "password": password,
-        },
+        "/users/auth/sign-up/email",
+        data: formData,
       );
+
       return response;
     } on DioException catch (e) {
       if (e.response != null) {
@@ -39,4 +43,5 @@ class PostService {
       throw Exception("Failed to connect to server: ${e.message}");
     }
   }
+
 }
