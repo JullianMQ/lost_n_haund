@@ -7,5 +7,5 @@ export const zodClaimSchema = z.object({
   phone_num: z.coerce.string().regex(/^09\d{9}$/),
   user_id: z.string().regex(/^\d{8}$/),
   reference_id: z.string(),
-  justification: z.string().max(400).min(50),
+  justification: z.string().max(400).min(30),
 })
