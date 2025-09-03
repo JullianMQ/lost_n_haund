@@ -7,7 +7,6 @@ export const zodPostsSchema = z.object({
   date_found: z.coerce.date(),
   location_found: z.string(),
   status: z.enum(["held", "archived", "pending", "returned"]).default("pending"),
-  reference_id: z.string(),
 })
 
 export type postsSchema = {
@@ -17,7 +16,6 @@ export type postsSchema = {
   date_found: Date,
   location_found: string,
   status: "held" | "archived" | "pending" | "returned"
-  reference_id: string,
 }
 
 export const nullPostsSchema: postsSchema = {
@@ -27,5 +25,4 @@ export const nullPostsSchema: postsSchema = {
   date_found: new Date(),
   location_found: "",
   status: "pending",
-  reference_id: "",
 }
