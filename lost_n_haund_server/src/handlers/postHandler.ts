@@ -2,21 +2,21 @@ import type { Context } from 'hono'
 import type { HandlerResult } from './../utils/success.js'
 import { regexOrAll } from './../utils/regexUtil.js'
 import { NewSuccess, NewError } from './../utils/success.js'
-import { zValidator } from '@hono/zod-validator'
 import { zodPostsSchema } from './../utils/postsTypes.js'
 import { localToUTC, phTime } from './../utils/dateTimeConversion.js'
 import db from './../db.js'
+import { ObjectId } from 'mongodb'
 
 
 class ItemPostHandler {
   private postsDB = db.collection('posts')
 
   async getItems(c: Context) {
+
     const item_name = c.req.query('name') || ''
     const description = c.req.query('description') || ''
     const location_found = c.req.query('location') || ''
     const status = c.req.query('status') || ''
-    const reference_id = c.req.query('reference_id') || ''
     const item_category = c.req.queries('categories') || []
     const page = c.req.query('page') === undefined ? 0 : parseInt(c.req.query('page')!)
 
@@ -27,7 +27,6 @@ class ItemPostHandler {
           { description: regexOrAll(description) },
           { location_found: regexOrAll(location_found) },
           { status: regexOrAll(status) },
-          { reference_id: regexOrAll(reference_id) },
           {
             item_category: item_category.length !== 0
               ? { $all: item_category }
@@ -54,7 +53,6 @@ class ItemPostHandler {
         date_found: localToUTC(formData.get("date_found") as string, phTime),
         location_found: formData.get("location_found") as string,
         status: (formData.get("status") as string) || "pending",
-        reference_id: formData.get("reference_id") as string,
       }
 
       const res = zodPostsSchema.safeParse(rawData)
@@ -111,7 +109,6 @@ class ItemPostHandler {
         }
       }
 
-      // TODO: ADD WAY TO VALIDATE WITH zValidator from zodValidator
       const res = zodPostsSchema.partial().safeParse(updatedData)
       if (!res.success) {
         return {
@@ -121,7 +118,7 @@ class ItemPostHandler {
       }
 
       const updateResult = await this.postsDB.updateOne(
-        { reference_id: id },
+        { _id: new ObjectId(id) },
         { $set: updatedData }
       )
 
@@ -148,11 +145,11 @@ class ItemPostHandler {
   }
 
   async deletePost(c: Context): Promise<HandlerResult> {
-    const postID = c.req.param('id')
+    const id = c.req.param('id')
 
     try {
       const res = await this.postsDB.deleteOne(
-        { reference_id: postID }
+        { _id: new ObjectId(id) }
       )
 
       if (res.deletedCount === 0) {

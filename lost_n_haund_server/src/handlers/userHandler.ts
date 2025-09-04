@@ -11,7 +11,7 @@ import { zValidator } from '@hono/zod-validator'
 import { zodPostsSchema, nullPostsSchema, type postsSchema } from './../utils/postsTypes.js'
 import { localToUTC, phTime } from './../utils/dateTimeConversion.js'
 import db from './../db.js'
-import { resend } from './../utils/auth.js';
+import { auth, resend } from './../utils/auth.js';
 import { getSessionQuerySchema } from 'better-auth/api'
 
 // TODO: Maybe there's a way to upload the file directly? than saving it first in the server
@@ -33,6 +33,8 @@ const oauth2Client = new google.auth.OAuth2(
 oauth2Client.setCredentials({ refresh_token: REFRESH_TOKEN })
 const drive = google.drive({ version: 'v3', auth: oauth2Client })
 const usersDB = db.collection('users')
+const authUsersDB = db.collection('authUser')
+const accountDB = db.collection('account')
 const audienceId = '1c5c7e1e-0835-47ce-b903-9ad11db9e206'
 
 class UserHandler {
@@ -64,9 +66,10 @@ class UserHandler {
     }
   }
 
-  async signUpUser([user_name, user_email, user_id]: string[], phone_num?: string | undefined): Promise<HandlerResult> {
+  async signUpUser([user_name, user_email, user_id]: string[], phone_num = ""): Promise<HandlerResult> {
     let success = NewSuccess("")
     let error = NewError("")
+    console.log("phone_num", phone_num)
     try {
       const res = await usersDB.insertOne({
         user_name,
@@ -148,7 +151,7 @@ class UserHandler {
       if (resContacts.error !== null) {
         return {
           status: 503,
-          error: NewError(`Error deleting the user ${resContacts.error.message}`)
+          error: NewError(`Error updating the user ${resContacts.error.message}`)
         }
       }
 
@@ -157,13 +160,28 @@ class UserHandler {
       if (!resMongo.acknowledged) {
         return {
           status: 503,
-          error: NewError(`Error deleting the user: MongoError`)
+          error: NewError(`Error updating the user: Mongo UserDB Error`)
+        }
+      }
+
+      if (firstName !== "") {
+        const resAuthUpdate = {$set: {"name": `${firstName} ${lastName}`}}
+        const resAuthFilter = { "email": res.user_email }
+        const resAuthMongo = await authUsersDB.updateOne(
+          resAuthFilter,
+          resAuthUpdate
+        )
+        if (!resAuthMongo.acknowledged) {
+          return {
+            status: 503,
+            error: NewError(`Error updating the user: Mongo AuthUserDB Error`)
+          }
         }
       }
 
       return {
         status: 200,
-        success: NewSuccess("Update user successfully")
+        success: NewSuccess("Updated user successfully")
       }
     } catch (e) {
       return {
@@ -198,23 +216,43 @@ class UserHandler {
         }
       }
 
-      const resMongo = await usersDB.deleteOne(filter)
-      if (!resMongo.acknowledged) {
+      const resUsersMongo = await usersDB.deleteOne(filter)
+      if (!resUsersMongo.acknowledged) {
         return {
           status: 503,
-          error: NewError(`Error deleting the user: Mongo error`)
+          error: NewError("Error deleting the user: Mongo users error")
+        }
+      }
+
+      const resAuthUsersMongo = await authUsersDB.findOneAndDelete({
+        email: res?.user_email
+      })
+      if (!resAuthUsersMongo?._id) {
+        return {
+          status: 503,
+          error: NewError("Error deleting the user: Mongo authUsers error")
+        }
+      }
+
+      const resAccountMongo = await accountDB.deleteOne({
+        accountId: resAuthUsersMongo._id
+      })
+      if (!resAccountMongo.acknowledged) {
+        return {
+          status: 503,
+          error: NewError("Error deleting the user: Mongo account error")
         }
       }
 
       return {
         status: 200,
-        success: NewSuccess('Successfully deleted account')
+        success: NewSuccess("Successfully deleted account")
       }
     } catch (e) {
       console.error(`Error: ${e}`);
       return {
         status: 500,
-        error: NewError('Error deleting account')
+        error: NewError("Error deleting account")
       }
     }
   }

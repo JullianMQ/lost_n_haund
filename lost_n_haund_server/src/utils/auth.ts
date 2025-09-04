@@ -19,6 +19,9 @@ const auth = betterAuth({
   autoSignIn: false,
   user: {
     modelName: "authUser",
+    deleteUser: {
+      enabled: true
+    }
   },
   emailVerification: {
     sendOnSignUp: true,

@@ -20,7 +20,7 @@ export default class UserAuthHandler {
      application does not need the phone number of the user for authentication
      but maybe admins in the school will need it?
     */
-    const phone_num = String(formData.get('phone_num'))
+    const phone_num = String(formData.get('phone_num')) || ""
     const [firstName, lastName = ''] = name.split(' ')
 
     // TODO: CREATE ZOD SCHEMA FOR VALIDATION
@@ -29,14 +29,14 @@ export default class UserAuthHandler {
         firstName: formData.get("first_name") as string,
         lastName: formData.get("last_name") as string,
         email: formData.get("user_email") as string,
-        phone_num: formData.get("phone_num") as string,
+        phone_num: formData.get("phone_num") as string || "",
         user_id: formData.get("user_id") as string,
         reference_id: formData.get("reference_id") as string,
         justification: formData.get("justification") as string,
       }
 
     } catch (e) {
-      
+
     }
 
     try {
@@ -62,9 +62,9 @@ export default class UserAuthHandler {
         return {
           error: NewError('Error in creating account'),
           status: res.status
-        }        
+        }
       }
-      
+
       return {
         success: NewSuccess('Successfully created account'),
         status: 201
