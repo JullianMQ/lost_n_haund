@@ -8,21 +8,20 @@ class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
   @override
-  State<RegisterPage> createState() => registerPageState();
+  State<RegisterPage> createState() => RegisterPageState();
 }
 
+class RegisterPageState extends State<RegisterPage> {
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final contactController = TextEditingController();
+  final studentIdController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
-class registerPageState extends State<RegisterPage> {
-    final firstNameController = TextEditingController();
-    final lastNameController = TextEditingController();
-    final emailController = TextEditingController();
-    final contactController = TextEditingController();
-    final studentIdController = TextEditingController();
-    final passwordController = TextEditingController();
-    final confirmPasswordController = TextEditingController();
-
-    final PostService postService = PostService();
-    bool isLoading = false;
+  final PostService postService = PostService();
+  bool isLoading = false;
 
   Future<void> registerUser() async {
     final firstName = firstNameController.text.trim();
@@ -35,9 +34,9 @@ class registerPageState extends State<RegisterPage> {
 
     if (password != confirmPassword) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Passwords do not match")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Passwords do not match")));
       return;
     }
 
@@ -53,23 +52,29 @@ class registerPageState extends State<RegisterPage> {
         password: password,
       );
 
-      if (!mounted) return; 
+      if (!mounted) return;
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Successfully posted!")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Successfully posted!")));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text((response.data is Map ? response.data["error"] : response.data.toString()) ?? "Failed to post")),
-
+          SnackBar(
+            content: Text(
+              (response.data is Map
+                      ? response.data["error"]
+                      : response.data.toString()) ??
+                  "Failed to post",
+            ),
+          ),
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $e")));
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -83,7 +88,7 @@ class registerPageState extends State<RegisterPage> {
         width: double.infinity,
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("images/bg-hau.jpg"), 
+            image: AssetImage("images/bg-hau.jpg"),
             fit: BoxFit.cover,
           ),
         ),
@@ -151,7 +156,7 @@ class registerPageState extends State<RegisterPage> {
 
                     const SizedBox(height: 10),
 
-                     // Student/Employee ID
+                    // Student/Employee ID
                     MyTextfield(
                       controller: studentIdController,
                       hintText: 'Student/Employee ID',
@@ -182,13 +187,15 @@ class registerPageState extends State<RegisterPage> {
                     const SizedBox(height: 20),
 
                     MyButton(
+                      buttonText: "Sign Up",
                       onTap: isLoading ? null : registerUser,
                     ),
-                    if (isLoading) const Padding(
-                      padding: EdgeInsets.all(10),
-                      child: CircularProgressIndicator(),
-                    ),
-                const SizedBox(height: 20),
+                    if (isLoading)
+                      const Padding(
+                        padding: EdgeInsets.all(10),
+                        child: CircularProgressIndicator(),
+                      ),
+                    const SizedBox(height: 20),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -200,7 +207,12 @@ class registerPageState extends State<RegisterPage> {
                         const SizedBox(width: 4),
                         GestureDetector(
                           onTap: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage()));
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => LoginPage(),
+                              ),
+                            );
                           },
                           child: const Text(
                             'Login here',
@@ -211,7 +223,7 @@ class registerPageState extends State<RegisterPage> {
                           ),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),

@@ -1,17 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:lost_n_haund_client/components/my_button.dart';
 import 'package:lost_n_haund_client/components/my_textfield.dart';
+import 'package:lost_n_haund_client/pages/home_page.dart';
 import 'package:lost_n_haund_client/pages/register_page.dart';
+import 'package:lost_n_haund_client/services/post_service.dart';
 
-class LoginPage extends StatelessWidget {
-  LoginPage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
+  @override
+  State<LoginPage> createState() => LoginPageState();
+}
+
+class LoginPageState extends State<LoginPage> {
   //text controllers
-  final usernameController = TextEditingController();
+  final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
-  void signUserIn() {
-    
+  final PostService postService = PostService();
+  bool isLoading = false;
+
+  Future<void> signUserIn() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    setState(() => isLoading = true);
+
+    try {
+      final res = await postService.signInUser(
+        email: email,
+        password: password,
+      );
+
+      if (!mounted) return;
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              (res.data is Map ? res.data["error"] : res.data.toString()) ??
+                  "Failed to post",
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+    }
   }
 
   @override
@@ -49,11 +92,11 @@ class LoginPage extends StatelessWidget {
                     ),
 
                     const SizedBox(height: 20),
-              
-                    //username
+
+                    //email
                     MyTextfield(
-                      controller: usernameController,
-                      hintText: 'Username',
+                      controller: emailController,
+                      hintText: 'Email',
                       obscureText: false,
                       maxLines: 1,
                     ),
@@ -75,15 +118,20 @@ class LoginPage extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Text("Forgot Password?",
+                          Text(
+                            "Forgot Password?",
                             style: TextStyle(color: Colors.white),
-                          )
+                          ),
                         ],
                       ),
                     ),
 
                     MyButton(
-                      onTap: signUserIn,
+                      buttonText: "Sign In",
+                      // onTap: isLoading ? null : signUserIn,
+                      onTap: () async {
+                        await signUserIn();
+                      },
                     ),
 
                     Row(
@@ -98,7 +146,12 @@ class LoginPage extends StatelessWidget {
 
                         GestureDetector(
                           onTap: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterPage()));
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => RegisterPage(),
+                              ),
+                            );
                           },
                           child: const Text(
                             'Register now',
@@ -109,7 +162,7 @@ class LoginPage extends StatelessWidget {
                           ),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),

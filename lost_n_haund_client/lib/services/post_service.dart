@@ -4,14 +4,34 @@ import 'package:lost_n_haund_client/config/api_config.dart';
 class PostService {
   final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: ApiConfig.androidEmulatorUrl, 
+      baseUrl: ApiConfig.androidEmulatorUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: {"Content-Type": "application/json"},
     ),
   );
+
+  Future<Response> signInUser({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        "user_email": email,
+        "user_pass": password,
+      });
+
+      final res = await _dio.post("/users/auth/sign-in/email", data: formData);
+
+      // print(res.data); // use this output in the future for sessions
+      return res;
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return e.response!;
+      }
+      throw Exception("Failed to connect to server: ${e.message}");
+    }
+  }
 
   Future<Response> registerUser({
     required String firstName,
@@ -43,5 +63,4 @@ class PostService {
       throw Exception("Failed to connect to server: ${e.message}");
     }
   }
-
 }
