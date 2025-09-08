@@ -4,6 +4,7 @@ import 'package:lost_n_haund_client/components/filter_button.dart';
 import 'package:lost_n_haund_client/components/my_textfield.dart';
 import 'package:lost_n_haund_client/components/item_card.dart';
 import 'package:lost_n_haund_client/services/api_services.dart';
+import 'package:lost_n_haund_client/pages/item_info_page.dart';
 import 'package:dio/dio.dart';
 
 class HomePage extends StatelessWidget {
@@ -164,7 +165,9 @@ class HomePage extends StatelessWidget {
                       locationFound: itemPost['location_found'],
                       status: itemPost['status'],
                       referenceId: itemPost['_id'],
+                      itemData: itemPost, 
                     );
+
                   },
                 );
               },

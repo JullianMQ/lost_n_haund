@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lost_n_haund_client/pages/claim_form_page.dart';
+import 'package:lost_n_haund_client/pages/form_page.dart';
 import 'package:lost_n_haund_client/pages/contact_page.dart';
 import 'package:lost_n_haund_client/pages/about_us_page.dart';
 import 'package:lost_n_haund_client/pages/home_page.dart';
@@ -45,12 +45,12 @@ class CustomDrawer extends StatelessWidget {
               ),
               buttonOption(
                 context,
-                "Claim Form",
+                "Form",
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => ClaimForm()),
+                    MaterialPageRoute(builder: (context) => FormPage()),
                   );
                 },
               ),
