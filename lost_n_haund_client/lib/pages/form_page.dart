@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lost_n_haund_client/components/header.dart';
 import 'package:lost_n_haund_client/components/my_textfield.dart';
+import 'package:lost_n_haund_client/services/post_service.dart';
 
 class FormPage extends StatefulWidget {
   const FormPage({super.key});
@@ -436,17 +437,39 @@ class _FormPageState extends State<FormPage> {
                             borderRadius: BorderRadius.circular(30),
                           ),
                         ),
-                        onPressed: () {
+                        onPressed: () async {
                           if (formKey.currentState!.validate()) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  _formType == "claim"
-                                      ? "Claim Form Submitted!"
-                                      : "Lost Item Form Submitted!",
-                                ),
-                              ),
-                            );
+                            final api = PostService();
+
+                            if (_formType == "claim") {
+                              final res = await api.createClaim(
+                                firstName: firstNameController.text,
+                                lastName: lastNameController.text,
+                                email: emailController.text,
+                                contact: contactController.text,
+                                studentId: studentController.text,
+                                referenceId: "ref-${DateTime.now().millisecondsSinceEpoch}", // or from backend
+                                justification: claimController.text,
+                                imageFile: _selectedImage,
+                              );
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Claim Submitted: ${res.data}")),
+                              );
+                            } else {
+                              final res = await api.createLostItem(
+                                itemName: itemNameController.text,
+                                itemCategory: itemCategoryController.text,
+                                description: descriptionController.text,
+                                dateFound: dateFoundController.text,
+                                locationFound: locationFoundController.text,
+                                imageFile: _selectedImage,
+                              );
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Lost Item Submitted: ${res.data}")),
+                              );
+                            }
                           }
                         },
                         child: const Text("Submit"),
