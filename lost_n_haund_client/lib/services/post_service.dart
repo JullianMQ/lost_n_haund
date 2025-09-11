@@ -97,7 +97,6 @@ class PostService {
     }
   }
 
-  // ------------------- LOST ITEM -------------------
   Future<Response> createLostItem({
     required String itemName,
     required String itemCategory,
@@ -114,12 +113,12 @@ class PostService {
         "date_found": dateFound,
         "location_found": locationFound,
         "status": "pending",
-        if (imageFile != null)
-          "file": await MultipartFile.fromFile(imageFile.path,
-              filename: imageFile.path.split("/").last),
+        // if (imageFile != null)
+        //   "file": await MultipartFile.fromFile(imageFile.path,
+        //       filename: imageFile.path.split("/").last),
       });
 
-      final res = await _dio.post("/lost-items", data: formData);
+      final res = await _dio.post("/posts", data: formData);
       return res;
     } on DioException catch (e) {
       if (e.response != null) return e.response!;

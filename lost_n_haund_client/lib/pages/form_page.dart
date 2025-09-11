@@ -315,34 +315,34 @@ class _FormPageState extends State<FormPage> {
                 )),
           ],
         ),
-        if (_selectedImage != null) ...[
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.file(
-              _selectedImage!,
-              height: 150,
-              width: 150,
-              fit: BoxFit.cover,
-            ),
-          ),
-        ],
-        const SizedBox(height: 10),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF800000),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-                side: const BorderSide(color: Colors.white, width: 2),
-              ),
-            ),
-            onPressed: _pickImage,
-            child: const Text("Upload Photo"),
-          ),
-        ),
+        // if (_selectedImage != null) ...[
+        //   const SizedBox(height: 10),
+        //   ClipRRect(
+        //     borderRadius: BorderRadius.circular(10),
+        //     child: Image.file(
+        //       _selectedImage!,
+        //       height: 150,
+        //       width: 150,
+        //       fit: BoxFit.cover,
+        //     ),
+        //   ),
+        // ],
+        // const SizedBox(height: 10),
+        // SizedBox(
+        //   width: double.infinity,
+        //   child: ElevatedButton(
+        //     style: ElevatedButton.styleFrom(
+        //       backgroundColor: const Color(0xFF800000),
+        //       foregroundColor: Colors.white,
+        //       shape: RoundedRectangleBorder(
+        //         borderRadius: BorderRadius.circular(30),
+        //         side: const BorderSide(color: Colors.white, width: 2),
+        //       ),
+        //     ),
+        //     onPressed: _pickImage,
+        //     child: const Text("Upload Photo"),
+        //   ),
+        // ),
       ],
     );
   }
