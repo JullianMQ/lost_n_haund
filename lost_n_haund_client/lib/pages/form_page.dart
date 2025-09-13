@@ -45,9 +45,9 @@ class _FormPageState extends State<FormPage> {
         _selectedImage = File(pickedFile.path);
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Photo Uploaded!")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Photo Uploaded!")));
     }
   }
 
@@ -59,12 +59,14 @@ class _FormPageState extends State<FormPage> {
         // First Name
         Row(
           children: const [
-            Text("First Name:",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                )),
+            Text(
+              "First Name:",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ],
         ),
         MyTextfield(
@@ -78,12 +80,14 @@ class _FormPageState extends State<FormPage> {
         // Last Name
         Row(
           children: const [
-            Text("Last Name:",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                )),
+            Text(
+              "Last Name:",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ],
         ),
         MyTextfield(
@@ -97,12 +101,14 @@ class _FormPageState extends State<FormPage> {
         // Email
         Row(
           children: const [
-            Text("Email:",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                )),
+            Text(
+              "Email:",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ],
         ),
         MyTextfield(
@@ -116,12 +122,14 @@ class _FormPageState extends State<FormPage> {
         // Contact
         Row(
           children: const [
-            Text("Contact No:",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                )),
+            Text(
+              "Contact No:",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ],
         ),
         MyTextfield(
@@ -135,12 +143,14 @@ class _FormPageState extends State<FormPage> {
         // Student No.
         Row(
           children: const [
-            Text("Student No:",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                )),
+            Text(
+              "Student No:",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ],
         ),
         MyTextfield(
@@ -154,12 +164,14 @@ class _FormPageState extends State<FormPage> {
         // Reference ID Upload
         Row(
           children: const [
-            Text("Reference ID:",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                )),
+            Text(
+              "Reference ID:",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ],
         ),
         if (_selectedImage != null) ...[
@@ -195,12 +207,14 @@ class _FormPageState extends State<FormPage> {
         // Claim Justification
         Row(
           children: const [
-            Text("Claim Justification:",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                )),
+            Text(
+              "Claim Justification:",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ],
         ),
         MyTextfield(
@@ -219,12 +233,14 @@ class _FormPageState extends State<FormPage> {
       children: [
         Row(
           children: const [
-            Text("Item Name:",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                )),
+            Text(
+              "Item Name:",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ],
         ),
         MyTextfield(
@@ -237,12 +253,14 @@ class _FormPageState extends State<FormPage> {
 
         Row(
           children: const [
-            Text("Item Category:",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                )),
+            Text(
+              "Item Category:",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ],
         ),
         MyTextfield(
@@ -255,12 +273,14 @@ class _FormPageState extends State<FormPage> {
 
         Row(
           children: const [
-            Text("Description:",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                )),
+            Text(
+              "Description:",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ],
         ),
         MyTextfield(
@@ -272,12 +292,14 @@ class _FormPageState extends State<FormPage> {
 
         Row(
           children: const [
-            Text("Date Found:",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                )),
+            Text(
+              "Date Found:",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ],
         ),
         MyTextfield(
@@ -290,12 +312,14 @@ class _FormPageState extends State<FormPage> {
 
         Row(
           children: const [
-            Text("Location Found:",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                )),
+            Text(
+              "Location Found:",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ],
         ),
         MyTextfield(
@@ -307,12 +331,14 @@ class _FormPageState extends State<FormPage> {
 
         Row(
           children: const [
-            Text("Reference ID:",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                )),
+            Text(
+              "Reference ID:",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ],
         ),
         // if (_selectedImage != null) ...[
@@ -400,8 +426,10 @@ class _FormPageState extends State<FormPage> {
                           },
                           activeColor: Colors.white,
                         ),
-                        const Text("Claim Item",
-                            style: TextStyle(color: Colors.white)),
+                        const Text(
+                          "Claim Item",
+                          style: TextStyle(color: Colors.white),
+                        ),
 
                         const SizedBox(width: 20),
 
@@ -415,8 +443,10 @@ class _FormPageState extends State<FormPage> {
                           },
                           activeColor: Colors.white,
                         ),
-                        const Text("Lost Item",
-                            style: TextStyle(color: Colors.white)),
+                        const Text(
+                          "Lost Item",
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ],
                     ),
                     const Divider(color: Colors.white, thickness: 2),
@@ -448,13 +478,22 @@ class _FormPageState extends State<FormPage> {
                                 email: emailController.text,
                                 contact: contactController.text,
                                 studentId: studentController.text,
-                                referenceId: "ref-${DateTime.now().millisecondsSinceEpoch}", // or from backend
+                                referenceId:
+                                    "ref-${DateTime.now().millisecondsSinceEpoch}", // NOTE: Gerail use the reference ID of the lost item
                                 justification: claimController.text,
                                 imageFile: _selectedImage,
                               );
 
+                              if (res.statusCode == 200 ||
+                                  res.statusCode == 201) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Claim submitted!")), // For successful claims
+                                );
+                                return;
+                              }
+
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Claim Submitted: ${res.data}")),
+                                SnackBar(content: Text("${res.data}")), // For unsuccessful claims
                               );
                             } else {
                               final res = await api.createLostItem(
@@ -467,7 +506,11 @@ class _FormPageState extends State<FormPage> {
                               );
 
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Lost Item Submitted: ${res.data}")),
+                                SnackBar(
+                                  content: Text(
+                                    "Lost Item Submitted: ${res.data}",
+                                  ),
+                                ),
                               );
                             }
                           }

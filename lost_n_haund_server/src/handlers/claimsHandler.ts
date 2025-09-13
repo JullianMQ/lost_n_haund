@@ -57,10 +57,19 @@ class ClaimsHandler {
 
       const res = zodClaimSchema.safeParse(rawData, {
         error: (iss) => {
+          console.log("iss", iss)
           if (iss.code === "too_small") {
             return "justification too short, should be at least 30 characters"
           } else if (iss.code === "too_big") {
             return "justification too long, should be 400 max characters"
+          }
+
+          if (iss.path?.includes('phone_num')) {
+            return "Phone number is incorrect, please check that it is a valid Phillipine number"
+          }
+
+          if (iss.path?.includes('user_id')) {
+            return "The id format is incorrect"
           }
         }
       })
@@ -69,7 +78,7 @@ class ClaimsHandler {
         console.error(`Error ${res.error.issues.map(issue => issue.message).join(", ")}`)
         return {
           status: 400,
-          error: NewError(`Error parsing data: ${res.error.issues.map(issue => issue.message).join(", ")}`)
+          error: NewError(`${res.error.issues.map(issue => issue.message).join(", ")}`)
         }
       }
 
