@@ -6,7 +6,8 @@ import 'package:lost_n_haund_client/components/my_textfield.dart';
 import 'package:lost_n_haund_client/services/post_service.dart';
 
 class FormPage extends StatefulWidget {
-  const FormPage({super.key});
+  final String? referenceId;
+  const FormPage({super.key, this.referenceId});
 
   @override
   State<FormPage> createState() => _FormPageState();
@@ -163,9 +164,9 @@ class _FormPageState extends State<FormPage> {
 
         // Reference ID Upload
         Row(
-          children: const [
+          children: [
             Text(
-              "Reference ID:",
+              "Reference Photo/ID: ${widget.referenceId}",
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -313,7 +314,7 @@ class _FormPageState extends State<FormPage> {
         Row(
           children: const [
             Text(
-              "Location Found:",
+              "Location Found: (YYYY-MM-DD)",
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -330,45 +331,46 @@ class _FormPageState extends State<FormPage> {
         ),
 
         Row(
-          children: const [
+          children: [
             Text(
-              "Reference ID:",
+              "Reference Photo/ID: ${widget.referenceId}",
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.bold,    
                 color: Colors.white,
               ),
             ),
           ],
         ),
-        // if (_selectedImage != null) ...[
-        //   const SizedBox(height: 10),
-        //   ClipRRect(
-        //     borderRadius: BorderRadius.circular(10),
-        //     child: Image.file(
-        //       _selectedImage!,
-        //       height: 150,
-        //       width: 150,
-        //       fit: BoxFit.cover,
-        //     ),
-        //   ),
-        // ],
-        // const SizedBox(height: 10),
-        // SizedBox(
-        //   width: double.infinity,
-        //   child: ElevatedButton(
-        //     style: ElevatedButton.styleFrom(
-        //       backgroundColor: const Color(0xFF800000),
-        //       foregroundColor: Colors.white,
-        //       shape: RoundedRectangleBorder(
-        //         borderRadius: BorderRadius.circular(30),
-        //         side: const BorderSide(color: Colors.white, width: 2),
-        //       ),
-        //     ),
-        //     onPressed: _pickImage,
-        //     child: const Text("Upload Photo"),
-        //   ),
-        // ),
+        
+        if (_selectedImage != null) ...[
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.file(
+              _selectedImage!,
+              height: 150,
+              width: 150,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ],
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF800000),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+                side: const BorderSide(color: Colors.white, width: 2),
+              ),
+            ),
+            onPressed: _pickImage,
+            child: const Text("Upload Photo"),
+          ),
+        ),
       ],
     );
   }
@@ -479,7 +481,7 @@ class _FormPageState extends State<FormPage> {
                                 contact: contactController.text,
                                 studentId: studentController.text,
                                 referenceId:
-                                    "ref-${DateTime.now().millisecondsSinceEpoch}", // NOTE: Gerail use the reference ID of the lost item
+                                    widget.referenceId ?? "ref-${DateTime.now().millisecondsSinceEpoch}", 
                                 justification: claimController.text,
                                 imageFile: _selectedImage,
                               );
@@ -498,11 +500,10 @@ class _FormPageState extends State<FormPage> {
                             } else {
                               final res = await api.createLostItem(
                                 itemName: itemNameController.text,
-                                itemCategory: itemCategoryController.text,
+                                itemCategory: [itemCategoryController.text], 
                                 description: descriptionController.text,
                                 dateFound: dateFoundController.text,
                                 locationFound: locationFoundController.text,
-                                imageFile: _selectedImage,
                               );
 
                               ScaffoldMessenger.of(context).showSnackBar(

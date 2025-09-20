@@ -116,7 +116,7 @@ class ItemInfoPage extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => FormPage(),
+                            builder: (_) => FormPage(referenceId: itemData['_id']),
                           ),
                         );
                       },

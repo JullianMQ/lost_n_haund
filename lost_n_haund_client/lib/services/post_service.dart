@@ -99,30 +99,40 @@ class PostService {
 
   Future<Response> createLostItem({
     required String itemName,
-    required String itemCategory,
+    required List<String> itemCategory,
     required String description,
     required String dateFound,
     required String locationFound,
-    File? imageFile,
   }) async {
     try {
-      final formData = FormData.fromMap({
-        "item_name": itemName,
-        "item_category": itemCategory,
-        "description": description,
-        "date_found": dateFound,
-        "location_found": locationFound,
-        "status": "pending",
-        // if (imageFile != null)
-        //   "file": await MultipartFile.fromFile(imageFile.path,
-        //       filename: imageFile.path.split("/").last),
-      });
+      final formData = FormData();
 
-      final res = await _dio.post("/posts", data: formData);
+      // Required fields
+      formData.fields
+        ..add(MapEntry("item_name", itemName))
+        ..add(MapEntry("description", description))
+        ..add(MapEntry("date_found", dateFound))
+        ..add(MapEntry("location_found", locationFound))
+        ..add(MapEntry("status", "pending")); 
+
+      for (final category in itemCategory) {
+        formData.fields.add(MapEntry("item_category", category));
+      }
+
+      final res = await _dio.post(
+        "/posts",
+        data: formData,
+        options: Options(headers: {"Content-Type": "multipart/form-data"}),
+      );
+
       return res;
     } on DioException catch (e) {
-      if (e.response != null) return e.response!;
-      throw Exception("Failed to connect to server: ${e.message}");
+      return e.response ??
+          Response(
+            requestOptions: e.requestOptions,
+            statusCode: 500,
+            statusMessage: "Internal client error",
+          );
     }
   }
 }
