@@ -76,6 +76,21 @@ class PostService {
     File? imageFile,
   }) async {
     try {
+      String? uploadedUrl;
+
+      if (imageFile != null) {
+        final uploadForm = FormData.fromMap({
+          "file": await MultipartFile.fromFile(imageFile.path,
+              filename: imageFile.path.split("/").last),
+        });
+
+        final uploadRes = await _dio.post("/upload", data: uploadForm);
+
+        if (uploadRes.statusCode == 200 && uploadRes.data["success"] != null) {
+          uploadedUrl = uploadRes.data["success"]["urlImage"];
+        }
+      }
+
       final formData = FormData.fromMap({
         "first_name": firstName,
         "last_name": lastName,
@@ -84,9 +99,7 @@ class PostService {
         "user_id": studentId,
         "reference_id": referenceId,
         "justification": justification,
-        if (imageFile != null)
-          "file": await MultipartFile.fromFile(imageFile.path,
-              filename: imageFile.path.split("/").last),
+        if (uploadedUrl != null) "image_url": uploadedUrl,
       });
 
       final res = await _dio.post("/claims", data: formData);
@@ -97,26 +110,48 @@ class PostService {
     }
   }
 
+
   Future<Response> createLostItem({
     required String itemName,
     required List<String> itemCategory,
     required String description,
     required String dateFound,
     required String locationFound,
+    File? imageFile,
   }) async {
     try {
+      String? uploadedUrl;
+
+      if (imageFile != null) {
+        final uploadForm = FormData.fromMap({
+          "file": await MultipartFile.fromFile(
+            imageFile.path,
+            filename: imageFile.path.split("/").last,
+          ),
+        });
+
+        final uploadRes = await _dio.post("/upload", data: uploadForm);
+
+        if (uploadRes.statusCode == 200 && uploadRes.data["success"] != null) {
+          uploadedUrl = uploadRes.data["success"]["urlImage"];
+        }
+      }
+
       final formData = FormData();
 
-      // Required fields
       formData.fields
         ..add(MapEntry("item_name", itemName))
         ..add(MapEntry("description", description))
         ..add(MapEntry("date_found", dateFound))
         ..add(MapEntry("location_found", locationFound))
-        ..add(MapEntry("status", "pending")); 
+        ..add(MapEntry("status", "pending"));
 
       for (final category in itemCategory) {
         formData.fields.add(MapEntry("item_category", category));
+      }
+
+      if (uploadedUrl != null) {
+        formData.fields.add(MapEntry("image_url", uploadedUrl));
       }
 
       final res = await _dio.post(
@@ -126,13 +161,13 @@ class PostService {
       );
 
       return res;
-    } on DioException catch (e) {
-      return e.response ??
-          Response(
-            requestOptions: e.requestOptions,
-            statusCode: 500,
-            statusMessage: "Internal client error",
-          );
+      } on DioException catch (e) {
+        return e.response ??
+            Response(
+              requestOptions: e.requestOptions,
+              statusCode: 500,
+              statusMessage: "Internal client error",
+            );
+          }
     }
   }
-}

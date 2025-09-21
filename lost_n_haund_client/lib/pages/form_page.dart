@@ -37,6 +37,30 @@ class _FormPageState extends State<FormPage> {
   // Form Type Selector
   String _formType = "claim"; // Default: Claim Form
 
+  void resetForm() {
+    formKey.currentState?.reset();
+
+    // Claim controllers
+    firstNameController.clear();
+    lastNameController.clear();
+    emailController.clear();
+    contactController.clear();
+    studentController.clear();
+    claimController.clear();
+
+    // Lost item controllers
+    itemNameController.clear();
+    itemCategoryController.clear();
+    descriptionController.clear();
+    dateFoundController.clear();
+    locationFoundController.clear();
+
+    // Reset image
+    setState(() {
+      _selectedImage = null;
+    });
+  }
+
   // Image Picker Function
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -294,7 +318,7 @@ class _FormPageState extends State<FormPage> {
         Row(
           children: const [
             Text(
-              "Date Found:",
+              "Date Found:(YYYY-MM-DD)",
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -305,7 +329,7 @@ class _FormPageState extends State<FormPage> {
         ),
         MyTextfield(
           controller: dateFoundController,
-          hintText: 'Date Found',
+          hintText: 'Date Found: (YYYY-MM-DD)',
           obscureText: false,
           maxLines: 1,
         ),
@@ -314,7 +338,7 @@ class _FormPageState extends State<FormPage> {
         Row(
           children: const [
             Text(
-              "Location Found: (YYYY-MM-DD)",
+              "Location Found:",
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -491,6 +515,7 @@ class _FormPageState extends State<FormPage> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text("Claim submitted!")), // For successful claims
                                 );
+                                resetForm();
                                 return;
                               }
 
@@ -507,12 +532,14 @@ class _FormPageState extends State<FormPage> {
                               );
 
                               ScaffoldMessenger.of(context).showSnackBar(
+                                
                                 SnackBar(
                                   content: Text(
                                     "Lost Item Submitted: ${res.data}",
                                   ),
                                 ),
                               );
+                              resetForm();
                             }
                           }
                         },

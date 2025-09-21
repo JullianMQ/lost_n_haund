@@ -94,7 +94,7 @@ class ItemPostHandler {
       const formData = await c.req.formData()
       const updatedData: Record<string, unknown> = {}
       const formEntries = formData.entries()
-
+      
       for (const [key, value] of formEntries) {
         if (value === null) continue
         if (typeof value === "string" && value.trim() === "") continue
