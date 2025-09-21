@@ -274,6 +274,7 @@ class UserHandler {
         requestBody: {
           name: f.name,
           mimeType: f.type,
+          parents: ["1gTxMWFG93KcJKWoz0UNVJCgLAC0ZVze8"]
         },
         media: {
           mimeType: f.type,
