@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:lost_n_haund_client/pages/login_page.dart';
+import 'package:lost_n_haund_client/components/filter.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => FilterProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

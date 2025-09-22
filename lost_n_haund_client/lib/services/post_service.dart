@@ -207,4 +207,36 @@ class PostService {
           );
     }
   }
+
+  Future<Response> getFilteredPosts({
+    String? name,
+    String? description,
+    String? location,
+    String? status,
+    List<String>? categories,
+    int? page,
+  }) async {
+    final Map<String, dynamic> queryParams = {};
+
+    if (name != null && name.isNotEmpty) {
+      queryParams['name'] = name;
+    }
+
+    if (location != null && location.isNotEmpty) {
+      queryParams['location'] = location;
+    }
+
+    if (categories != null && categories.isNotEmpty) {
+      queryParams['categories'] = categories; 
+    }
+
+    if (page != null) {
+      queryParams['page'] = page.toString();
+    }
+
+    return await _dio.get(
+      "/posts",
+      queryParameters: queryParams,
+    );
+  }
 }

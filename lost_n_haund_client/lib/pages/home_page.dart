@@ -3,29 +3,30 @@ import 'package:lost_n_haund_client/components/header.dart';
 import 'package:lost_n_haund_client/components/filter_button.dart';
 import 'package:lost_n_haund_client/components/my_textfield.dart';
 import 'package:lost_n_haund_client/components/item_card.dart';
-import 'package:lost_n_haund_client/services/post_service.dart';
-import 'package:dio/dio.dart';
+import 'package:lost_n_haund_client/components/filter.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatelessWidget {
   final formKey = GlobalKey<FormState>();
-  HomePage({super.key});
-
   final nameController = TextEditingController();
-  final PostService api = PostService();
+
+  HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final filterProvider = Provider.of<FilterProvider>(context, listen: false);
+
     return Scaffold(
       appBar: const PreferredSize(
         preferredSize: Size.fromHeight(75),
         child: Header(),
       ),
       endDrawer: CustomDrawer(),
-
       body: Column(
         children: [
           const SizedBox(height: 10),
 
+          // 🔹 Background + Search + Filters
           Stack(
             children: [
               Image.asset(
@@ -34,17 +35,10 @@ class HomePage extends StatelessWidget {
                 width: double.infinity,
                 height: 250,
               ),
-
               Container(
                 width: double.infinity,
-                margin: const EdgeInsets.symmetric(
-                  horizontal: 15,
-                  vertical: 25,
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 15,
-                  vertical: 15,
-                ),
+                margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 25),
+                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
                 decoration: BoxDecoration(
                   color: const Color(0xFF7B001E),
                   borderRadius: BorderRadius.circular(15),
@@ -66,38 +60,79 @@ class HomePage extends StatelessWidget {
                         color: Colors.white,
                       ),
                     ),
-
                     const SizedBox(height: 10),
-
                     MyTextfield(
                       controller: nameController,
                       hintText: 'Name',
                       obscureText: false,
                       maxLines: 1,
+                      onChanged: (val) {
+                        // Optional: Implement search logic in provider later
+                      },
                     ),
-
                     const SizedBox(height: 15),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
+                        // 🔹 Date Sort Button
                         FilterButton(
                           text: "Date",
                           onPressed: () {
-                            print("Filter by Date");
+                            filterProvider.sortByDate();
                           },
                         ),
-                        FilterButton(
-                          text: "Category",
-                          onPressed: () {
-                            print("Filter by Category");
+
+                        // 🔹 Category Dropdown
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            filterProvider.setCategory(value == "All" ? "" : value);
                           },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: "All",
+                              child: Text("All"),
+                            ),
+                            const PopupMenuItem(
+                              value: "Backpack",
+                              child: Text("Backpack"),
+                            ),
+                            const PopupMenuItem(
+                              value: "Phone",
+                              child: Text("Phone"),
+                            ),
+                            const PopupMenuItem(
+                              value: "ID",
+                              child: Text("ID"),
+                            ),
+                          ],
+                          child: const FilterButton(text: "Category"),
                         ),
-                        FilterButton(
-                          text: "Location",
-                          onPressed: () {
-                            print("Filter by Location");
+
+                        // 🔹 Location Dropdown
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            filterProvider.setLocation(value == "All" ? "" : value);
                           },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: "All",
+                              child: Text("All"),
+                            ),
+                            const PopupMenuItem(
+                              value: "Library",
+                              child: Text("Library"),
+                            ),
+                            const PopupMenuItem(
+                              value: "Gym",
+                              child: Text("Gym"),
+                            ),
+                            const PopupMenuItem(
+                              value: "Canteen",
+                              child: Text("Canteen"),
+                            ),
+                          ],
+                          child: const FilterButton(text: "Location"),
                         ),
                       ],
                     ),
@@ -107,6 +142,7 @@ class HomePage extends StatelessWidget {
             ],
           ),
 
+          // 🔹 Section Title
           Container(
             color: const Color(0xFF7B001E),
             width: double.infinity,
@@ -124,36 +160,19 @@ class HomePage extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-          // ItemCard(
-          //   imagePath: 'images/bg-hau.jpg',
-          //   itemName: "cniseah",
-          //   category: "cniseah",
-          //   description: "cniseah",
-          //   dateFound: "cniseah",
-          //   locationFound: "cniseah",
-          //   status: "cniseah",
-          //   referenceId: "cniseah",
-          // ),
+          // 🔹 Post List (Listens to FilterProvider)
           Expanded(
-            child: FutureBuilder(
-              future: api.getPosts(),
-              builder: (context, asyncSnapshot) {
-                if (asyncSnapshot.connectionState ==
-                    ConnectionState.waiting) {
-                  return CircularProgressIndicator();
+            child: Consumer<FilterProvider>(
+              builder: (context, provider, child) {
+                if (provider.posts.isEmpty) {
+                  return const Center(
+                    child: Text("No items found"),
+                  );
                 }
-
-                if (asyncSnapshot.hasError) {
-                  return Text("Error retrieving items");
-                }
-
-                final res = asyncSnapshot.data as Response;
-                final itemPosts = res.data as List<dynamic>;
-
                 return ListView.builder(
-                  itemCount: itemPosts.length,
+                  itemCount: provider.posts.length,
                   itemBuilder: (context, index) {
-                    final itemPost = itemPosts[index] as Map<String, dynamic>;
+                    final itemPost = provider.posts[index] as Map<String, dynamic>;
 
                     final imagePath = (itemPost['image_url'] != null &&
                             itemPost['image_url'].toString().isNotEmpty)
@@ -169,9 +188,8 @@ class HomePage extends StatelessWidget {
                       locationFound: itemPost['location_found'],
                       status: itemPost['status'],
                       referenceId: itemPost['_id'],
-                      itemData: itemPost, 
+                      itemData: itemPost,
                     );
-
                   },
                 );
               },

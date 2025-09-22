@@ -5,6 +5,7 @@ class MyTextfield extends StatelessWidget {
   final String hintText;
   final bool obscureText;
   final int maxLines;
+  final Function(String)? onChanged;
 
   const MyTextfield({
     super.key,
@@ -12,6 +13,7 @@ class MyTextfield extends StatelessWidget {
     required this.controller,
     required this.hintText,
     this.obscureText = false,
+    this.onChanged,
   });
 
   @override
@@ -22,6 +24,7 @@ class MyTextfield extends StatelessWidget {
         controller: controller,
         obscureText: obscureText,
         maxLines: maxLines,
+        onChanged: onChanged,
         decoration: InputDecoration(
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(color: Colors.white),

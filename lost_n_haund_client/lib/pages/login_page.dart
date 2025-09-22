@@ -35,7 +35,7 @@ class LoginPageState extends State<LoginPage> {
       if (!mounted) return;
 
       if (res.statusCode == 200 || res.statusCode == 201) {
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomePage()),
         );
