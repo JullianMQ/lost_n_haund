@@ -3,8 +3,7 @@ import 'package:lost_n_haund_client/components/header.dart';
 import 'package:lost_n_haund_client/components/filter_button.dart';
 import 'package:lost_n_haund_client/components/my_textfield.dart';
 import 'package:lost_n_haund_client/components/item_card.dart';
-import 'package:lost_n_haund_client/services/api_services.dart';
-import 'package:lost_n_haund_client/pages/item_info_page.dart';
+import 'package:lost_n_haund_client/services/post_service.dart';
 import 'package:dio/dio.dart';
 
 class HomePage extends StatelessWidget {
@@ -12,7 +11,7 @@ class HomePage extends StatelessWidget {
   HomePage({super.key});
 
   final nameController = TextEditingController();
-  final ApiService api = ApiService();
+  final PostService api = PostService();
 
   @override
   Widget build(BuildContext context) {
@@ -156,8 +155,13 @@ class HomePage extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final itemPost = itemPosts[index] as Map<String, dynamic>;
 
+                    final imagePath = (itemPost['image_url'] != null &&
+                            itemPost['image_url'].toString().isNotEmpty)
+                        ? itemPost['image_url']
+                        : 'images/bg-hau.jpg';
+
                     return ItemCard(
-                      imagePath: 'images/bg-hau.jpg',
+                      imagePath: imagePath,
                       itemName: itemPost['item_name'],
                       category: "${itemPost['item_category']}",
                       description: itemPost['description'],

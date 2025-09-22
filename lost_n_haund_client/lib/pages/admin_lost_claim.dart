@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lost_n_haund_client/components/header.dart';
 import 'package:lost_n_haund_client/components/my_textfield.dart';
-import 'package:lost_n_haund_client/components/item_card.dart';
 
 class AdminLostClaim extends StatelessWidget {
   final formKey = GlobalKey<FormState>();

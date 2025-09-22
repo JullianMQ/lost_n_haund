@@ -529,6 +529,7 @@ class _FormPageState extends State<FormPage> {
                                 description: descriptionController.text,
                                 dateFound: dateFoundController.text,
                                 locationFound: locationFoundController.text,
+                                imageFile: _selectedImage,
                               );
 
                               ScaffoldMessenger.of(context).showSnackBar(

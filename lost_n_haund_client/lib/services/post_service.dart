@@ -8,33 +8,10 @@ class PostService {
       baseUrl: ApiConfig.androidEmulatorUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
-      headers: {"Content-Type": "application/json"},
     ),
   );
 
-  Future<Response> signInUser({
-    required String email,
-    required String password,
-  }) async {
-    try {
-      final formData = FormData.fromMap({
-        "user_email": email,
-        "user_pass": password,
-      });
-
-      final res = await _dio.post("/users/auth/sign-in/email", data: formData);
-
-      // print(res.data); // use this output in the future for sessions
-      return res;
-    } on DioException catch (e) {
-      if (e.response != null) {
-        return e.response!;
-      }
-      throw Exception("Failed to connect to server: ${e.message}");
-    }
-  }
-
-  Future<Response> registerUser({
+  Future<Response> signUpUser({
     required String firstName,
     required String lastName,
     required String email,
@@ -58,12 +35,37 @@ class PostService {
 
       return response;
     } on DioException catch (e) {
-      if (e.response != null) {
-        return e.response!;
-      }
-      throw Exception("Failed to connect to server: ${e.message}");
+      return e.response ??
+          Response(
+            requestOptions: e.requestOptions,
+            statusCode: 500,
+            statusMessage: "Sign-up failed: ${e.message}",
+          );
     }
   }
+
+  Future<Response> loginUser({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        "user_email": email,
+        "user_pass": password,
+      });
+
+      final res = await _dio.post("/users/auth/sign-in/email", data: formData);
+      return res;
+    } on DioException catch (e) {
+      return e.response ??
+          Response(
+            requestOptions: e.requestOptions,
+            statusCode: 500,
+            statusMessage: "Login failed: ${e.message}",
+          );
+    }
+  }
+
 
   Future<Response> createClaim({
     required String firstName,
@@ -80,8 +82,10 @@ class PostService {
 
       if (imageFile != null) {
         final uploadForm = FormData.fromMap({
-          "file": await MultipartFile.fromFile(imageFile.path,
-              filename: imageFile.path.split("/").last),
+          "file": await MultipartFile.fromFile(
+            imageFile.path,
+            filename: imageFile.path.split("/").last,
+          ),
         });
 
         final uploadRes = await _dio.post("/upload", data: uploadForm);
@@ -105,8 +109,12 @@ class PostService {
       final res = await _dio.post("/claims", data: formData);
       return res;
     } on DioException catch (e) {
-      if (e.response != null) return e.response!;
-      throw Exception("Failed to connect to server: ${e.message}");
+      return e.response ??
+          Response(
+            requestOptions: e.requestOptions,
+            statusCode: 500,
+            statusMessage: "Claim creation failed: ${e.message}",
+          );
     }
   }
 
@@ -137,22 +145,15 @@ class PostService {
         }
       }
 
-      final formData = FormData();
-
-      formData.fields
-        ..add(MapEntry("item_name", itemName))
-        ..add(MapEntry("description", description))
-        ..add(MapEntry("date_found", dateFound))
-        ..add(MapEntry("location_found", locationFound))
-        ..add(MapEntry("status", "pending"));
-
-      for (final category in itemCategory) {
-        formData.fields.add(MapEntry("item_category", category));
-      }
-
-      if (uploadedUrl != null) {
-        formData.fields.add(MapEntry("image_url", uploadedUrl));
-      }
+      final formData = FormData.fromMap({
+        "item_name": itemName,
+        "item_category": itemCategory, 
+        "description": description,
+        "date_found": dateFound,
+        "location_found": locationFound,
+        "status": "pending",
+        if (uploadedUrl != null) "image_url": uploadedUrl,
+      });
 
       final res = await _dio.post(
         "/posts",
@@ -161,13 +162,49 @@ class PostService {
       );
 
       return res;
-      } on DioException catch (e) {
-        return e.response ??
-            Response(
-              requestOptions: e.requestOptions,
-              statusCode: 500,
-              statusMessage: "Internal client error",
-            );
-          }
+    } on DioException catch (e) {
+      return e.response ??
+          Response(
+            requestOptions: e.requestOptions,
+            statusCode: 500,
+            statusMessage: "Lost item creation failed: ${e.message}",
+          );
     }
   }
+
+
+  Future<Response> createPost(String title, String content) async {
+    try {
+      final response = await _dio.post(
+        "/posts",
+        data: {
+          "title": title,
+          "content": content,
+        },
+        options: Options(headers: {"Content-Type": "application/json"}),
+      );
+      return response;
+    } on DioException catch (e) {
+      return e.response ??
+          Response(
+            requestOptions: e.requestOptions,
+            statusCode: 500,
+            statusMessage: "Post creation failed: ${e.message}",
+          );
+    }
+  }
+
+  Future<Response> getPosts() async {
+    try {
+      final response = await _dio.get("/posts");
+      return response;
+    } on DioException catch (e) {
+      return e.response ??
+          Response(
+            requestOptions: e.requestOptions,
+            statusCode: 500,
+            statusMessage: "Fetching posts failed: ${e.message}",
+          );
+    }
+  }
+}

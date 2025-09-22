@@ -27,7 +27,7 @@ class LoginPageState extends State<LoginPage> {
     setState(() => isLoading = true);
 
     try {
-      final res = await postService.signInUser(
+      final res = await postService.loginUser(
         email: email,
         password: password,
       );
