@@ -39,18 +39,37 @@ class ItemCard extends StatelessWidget {
             // Item Image
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
+              child: Image.network(
                 imagePath,
                 height: 120,
                 width: double.infinity,
                 fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    height: 120,
+                    width: double.infinity,
+                    color: Colors.grey[300],
+                    child: const Center(child: CircularProgressIndicator()),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 120,
+                    width: double.infinity,
+                    color: Colors.grey[300],
+                    child: const Center(
+                      child: Icon(Icons.broken_image, color: Colors.grey, size: 40),
+                    ),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 10),
 
-            Text("Item Name: $itemName", style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-            Text("Item Category: $category", style: const TextStyle(color: Colors.white)),
-            Text("Description: $description", style: const TextStyle(color: Colors.white)),
+            Text(itemName, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            Text("Category: $category", style: const TextStyle(color: Colors.white)),
+            Text(description, style: const TextStyle(color: Colors.white)),
             Text("Date Found: $dateFound", style: const TextStyle(color: Colors.white)),
             Text("Location Found: $locationFound", style: const TextStyle(color: Colors.white)),
             Text("Status: $status", style: const TextStyle(color: Colors.white)),

@@ -180,7 +180,7 @@ class HomePage extends StatelessWidget {
                         : 'images/bg-hau.jpg';
 
                     return ItemCard(
-                      imagePath: imagePath,
+                      imagePath: itemPost['image_url'] ?? "",
                       itemName: itemPost['item_name'],
                       category: "${itemPost['item_category']}",
                       description: itemPost['description'],

@@ -53,6 +53,7 @@ class ItemPostHandler {
         date_found: localToUTC(formData.get("date_found") as string, phTime),
         location_found: formData.get("location_found") as string,
         status: (formData.get("status") as string) || "pending",
+        image_url: formData.get("image_url") as string
       }
 
       const res = zodPostsSchema.safeParse(rawData)
