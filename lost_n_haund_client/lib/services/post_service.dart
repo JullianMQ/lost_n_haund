@@ -11,7 +11,29 @@ class PostService {
     ),
   );
 
-  Future<Response> signUpUser({
+  Future<Response> signInUser({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        "email": email,
+        "password": password,
+      });
+
+      final res = await _dio.post("/users/auth/sign-in/email", data: formData);
+
+      // print(res.data); // use this output in the future for sessions
+      return res;
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return e.response!;
+      }
+      throw Exception("Failed to connect to server: ${e.message}");
+    }
+  }
+
+  Future<Response> registerUser({
     required String firstName,
     required String lastName,
     required String email,
@@ -140,7 +162,7 @@ class PostService {
 
         final uploadRes = await _dio.post("/upload", data: uploadForm);
 
-        if (uploadRes.statusCode == 200 && uploadRes.data["success"] != null) {
+        if (uploadRes.statusCode == 200) {
           uploadedUrl = uploadRes.data["success"]["urlImage"];
         }
       }
