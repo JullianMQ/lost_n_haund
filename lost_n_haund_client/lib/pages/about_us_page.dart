@@ -50,7 +50,6 @@ class AboutUsPage extends StatelessWidget {
                     "With features like online item listings, Lost N Haund streamlines both recovery and classroom participation—making campus life safer, smarter, and more connected.",
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
