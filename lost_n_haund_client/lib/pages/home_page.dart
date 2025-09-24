@@ -26,7 +26,6 @@ class HomePage extends StatelessWidget {
         children: [
           const SizedBox(height: 10),
 
-          // 🔹 Background + Search + Filters
           Stack(
             children: [
               Image.asset(
@@ -67,7 +66,7 @@ class HomePage extends StatelessWidget {
                       obscureText: false,
                       maxLines: 1,
                       onChanged: (val) {
-                        // Optional: Implement search logic in provider later
+                        context.read<FilterProvider>().setSearchQuery(val);
                       },
                     ),
                     const SizedBox(height: 15),
@@ -75,7 +74,6 @@ class HomePage extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        // 🔹 Date Sort Button
                         FilterButton(
                           text: "Date",
                           onPressed: () {
@@ -83,56 +81,44 @@ class HomePage extends StatelessWidget {
                           },
                         ),
 
-                        // 🔹 Category Dropdown
-                        PopupMenuButton<String>(
-                          onSelected: (value) {
-                            filterProvider.setCategory(value == "All" ? "" : value);
+                        Consumer<FilterProvider>(
+                          builder: (context, provider, _) {
+                            return PopupMenuButton<String>(
+                              onSelected: (value) {
+                                provider.setCategory(value == "All" ? "" : value);
+                              },
+                              itemBuilder: (context) => const [
+                                PopupMenuItem(value: "All", child: Text("All")),
+                                PopupMenuItem(value: "Bag", child: Text("Bag")),
+                                PopupMenuItem(value: "Device", child: Text("Device")),
+                                PopupMenuItem(value: "Umbrella", child: Text("Umbrella")),
+                                PopupMenuItem(value: "Tumbler", child: Text("Tumbler")),
+                                PopupMenuItem(value: "Document", child: Text("Document")),
+                              ],
+                              child: FilterButton(text: provider.selectedCategory),
+                            );
                           },
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(
-                              value: "All",
-                              child: Text("All"),
-                            ),
-                            const PopupMenuItem(
-                              value: "Backpack",
-                              child: Text("Backpack"),
-                            ),
-                            const PopupMenuItem(
-                              value: "Phone",
-                              child: Text("Phone"),
-                            ),
-                            const PopupMenuItem(
-                              value: "ID",
-                              child: Text("ID"),
-                            ),
-                          ],
-                          child: const FilterButton(text: "Category"),
                         ),
 
-                        // 🔹 Location Dropdown
-                        PopupMenuButton<String>(
-                          onSelected: (value) {
-                            filterProvider.setLocation(value == "All" ? "" : value);
+                        Consumer<FilterProvider>(
+                          builder: (context, provider, _) {
+                            return PopupMenuButton<String>(
+                              onSelected: (value) {
+                                provider.setLocation(value == "All" ? "" : value);
+                              },
+                              itemBuilder: (context) => const [
+                                PopupMenuItem(value: "All", child: Text("All")),
+                                PopupMenuItem(value: "Library", child: Text("Library")),
+                                PopupMenuItem(value: "GGN", child: Text("GGN")),
+                                PopupMenuItem(value: "PGN", child: Text("PGN")),
+                                PopupMenuItem(value: "SJH", child: Text("SJH")),
+                                PopupMenuItem(value: "APS", child: Text("APS")),
+                                PopupMenuItem(value: "MGN", child: Text("MGN")),
+                                PopupMenuItem(value: "STL", child: Text("STL")),
+                              ],
+                              child: FilterButton(text: provider.selectedLocation),
+                            );
                           },
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(
-                              value: "All",
-                              child: Text("All"),
-                            ),
-                            const PopupMenuItem(
-                              value: "Library",
-                              child: Text("Library"),
-                            ),
-                            const PopupMenuItem(
-                              value: "Gym",
-                              child: Text("Gym"),
-                            ),
-                            const PopupMenuItem(
-                              value: "Canteen",
-                              child: Text("Canteen"),
-                            ),
-                          ],
-                          child: const FilterButton(text: "Location"),
                         ),
                       ],
                     ),
@@ -142,7 +128,6 @@ class HomePage extends StatelessWidget {
             ],
           ),
 
-          // 🔹 Section Title
           Container(
             color: const Color(0xFF7B001E),
             width: double.infinity,
@@ -160,7 +145,6 @@ class HomePage extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-          // 🔹 Post List (Listens to FilterProvider)
           Expanded(
             child: Consumer<FilterProvider>(
               builder: (context, provider, child) {

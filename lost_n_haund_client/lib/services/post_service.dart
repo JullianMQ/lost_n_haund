@@ -23,7 +23,6 @@ class PostService {
 
       final res = await _dio.post("/users/auth/sign-in/email", data: formData);
 
-      // print(res.data); // use this output in the future for sessions
       return res;
     } on DioException catch (e) {
       if (e.response != null) {
@@ -237,6 +236,7 @@ class PostService {
     String? status,
     List<String>? categories,
     int? page,
+    String? search,
   }) async {
     final Map<String, dynamic> queryParams = {};
 
@@ -255,6 +255,10 @@ class PostService {
     if (page != null) {
       queryParams['page'] = page.toString();
     }
+
+    if (search != null && search.isNotEmpty) { 
+    queryParams['search'] = search;
+  }
 
     return await _dio.get(
       "/posts",

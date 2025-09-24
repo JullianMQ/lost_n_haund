@@ -11,10 +11,9 @@ class FilterProvider with ChangeNotifier {
   List _posts = [];
   bool _isLoading = false;
 
-  // Getters
-  String get selectedCategory => _selectedCategory;
-  String get selectedLocation => _selectedLocation;
-  String get searchQuery => _searchQuery;
+  String get selectedCategory => _selectedCategory.isEmpty ? "Category" : _selectedCategory;
+  String get selectedLocation => _selectedLocation.isEmpty ? "Location" : _selectedLocation;
+  String get searchQuery => _searchQuery.isEmpty ? "Search" : _searchQuery;
   List get posts => _posts;
   bool get isLoading => _isLoading;
 
@@ -30,7 +29,7 @@ class FilterProvider with ChangeNotifier {
       final res = await _postService.getFilteredPosts(
         categories: _selectedCategory.isNotEmpty ? [_selectedCategory] : null,
         location: _selectedLocation.isNotEmpty ? _selectedLocation : null,
-       // search: _searchQuery.isNotEmpty ? _searchQuery : null,
+        name: _searchQuery.isNotEmpty ? _searchQuery : null, 
       );
 
       if (res.statusCode == 200) {
@@ -46,25 +45,21 @@ class FilterProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// 🔹 Update Category Filter
   void setCategory(String category) {
     _selectedCategory = category;
     fetchPosts();
   }
 
-  /// 🔹 Update Location Filter
   void setLocation(String location) {
     _selectedLocation = location;
     fetchPosts();
   }
 
-  /// 🔹 Update Search Query
   void setSearchQuery(String query) {
     _searchQuery = query;
     fetchPosts();
   }
 
-  /// 🔹 Sort Posts by Date (Newest First)
   void sortByDate() {
     _posts.sort((a, b) {
       DateTime dateA = DateTime.tryParse(a['date_found'] ?? '') ?? DateTime(1970);
@@ -74,7 +69,6 @@ class FilterProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// 🔹 Clear All Filters
   void clearFilters() {
     _selectedCategory = '';
     _selectedLocation = '';
