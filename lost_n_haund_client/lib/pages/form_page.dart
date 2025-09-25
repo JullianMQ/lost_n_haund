@@ -16,7 +16,6 @@ class FormPage extends StatefulWidget {
 class _FormPageState extends State<FormPage> {
   final formKey = GlobalKey<FormState>();
 
-  // Claim Form Controllers
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
   final emailController = TextEditingController();
@@ -24,7 +23,6 @@ class _FormPageState extends State<FormPage> {
   final studentController = TextEditingController();
   final claimController = TextEditingController();
 
-  // Lost Item Form Controllers
   final itemNameController = TextEditingController();
   final itemCategoryController = TextEditingController();
   final descriptionController = TextEditingController();
@@ -40,7 +38,6 @@ class _FormPageState extends State<FormPage> {
   void resetForm() {
     formKey.currentState?.reset();
 
-    // Claim controllers
     firstNameController.clear();
     lastNameController.clear();
     emailController.clear();
@@ -48,20 +45,17 @@ class _FormPageState extends State<FormPage> {
     studentController.clear();
     claimController.clear();
 
-    // Lost item controllers
     itemNameController.clear();
     itemCategoryController.clear();
     descriptionController.clear();
     dateFoundController.clear();
     locationFoundController.clear();
 
-    // Reset image
     setState(() {
       _selectedImage = null;
     });
   }
 
-  // Image Picker Function
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
@@ -70,18 +64,26 @@ class _FormPageState extends State<FormPage> {
         _selectedImage = File(pickedFile.path);
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Photo Uploaded!")));
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text("Photo Uploaded"),
+          content: const Text("Your photo has been successfully uploaded."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
     }
   }
 
-  // Claim Form Widget
   Widget _buildClaimForm() {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // First Name
         Row(
           children: const [
             Text(
@@ -102,7 +104,6 @@ class _FormPageState extends State<FormPage> {
         ),
         const SizedBox(height: 15),
 
-        // Last Name
         Row(
           children: const [
             Text(
@@ -123,7 +124,6 @@ class _FormPageState extends State<FormPage> {
         ),
         const SizedBox(height: 15),
 
-        // Email
         Row(
           children: const [
             Text(
@@ -144,7 +144,6 @@ class _FormPageState extends State<FormPage> {
         ),
         const SizedBox(height: 15),
 
-        // Contact
         Row(
           children: const [
             Text(
@@ -165,7 +164,6 @@ class _FormPageState extends State<FormPage> {
         ),
         const SizedBox(height: 15),
 
-        // Student No.
         Row(
           children: const [
             Text(
@@ -186,7 +184,6 @@ class _FormPageState extends State<FormPage> {
         ),
         const SizedBox(height: 15),
 
-        // Reference ID Upload
         Row(
           children: [
             Text(
@@ -229,7 +226,6 @@ class _FormPageState extends State<FormPage> {
         ),
         const Divider(color: Colors.white, thickness: 2),
 
-        // Claim Justification
         Row(
           children: const [
             Text(
@@ -251,7 +247,6 @@ class _FormPageState extends State<FormPage> {
     );
   }
 
-  // Lost Item Form Widget
   Widget _buildLostForm() {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -438,7 +433,6 @@ class _FormPageState extends State<FormPage> {
                     ),
                     const SizedBox(height: 10),
 
-                    // Radio Buttons
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -478,7 +472,6 @@ class _FormPageState extends State<FormPage> {
                     const Divider(color: Colors.white, thickness: 2),
                     const SizedBox(height: 10),
 
-                    // Show Form Based on Selection
                     _formType == "claim" ? _buildClaimForm() : _buildLostForm(),
                     const SizedBox(height: 20),
 
@@ -512,8 +505,16 @@ class _FormPageState extends State<FormPage> {
 
                               if (res.statusCode == 200 ||
                                   res.statusCode == 201) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text("Claim submitted!")), // For successful claims
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: const Text("Success"),
+                                    content: Text(
+                                      _formType == "claim"
+                                        ? "Your claim has been submitted successfully!"
+                                        : "Lost item report has been submitted successfully!",
+                                    ),
+                                  )
                                 );
                                 resetForm();
                                 return;
@@ -532,15 +533,38 @@ class _FormPageState extends State<FormPage> {
                                 imageFile: _selectedImage,
                               );
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                
-                                SnackBar(
-                                  content: Text(
-                                    "Lost Item Submitted: ${res.data}",
+                              if (res.statusCode == 200 || res.statusCode == 201) {
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: const Text("Success"),
+                                    content: const Text("Lost item report has been submitted successfully!"),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(ctx).pop();
+                                          resetForm();
+                                        },
+                                        child: const Text("OK"),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              );
-                              resetForm();
+                                );
+                              } else {
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: const Text("Error"),
+                                    content: Text("Failed to submit lost item: ${res.data}"),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.of(ctx).pop(),
+                                        child: const Text("OK"),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
                             }
                           }
                         },

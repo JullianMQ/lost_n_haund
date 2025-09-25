@@ -42,7 +42,7 @@ class AboutUsPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 10), 
                   Text(
-                    "Lost N Haund is a digital solution developed by Group KAWR to improve the process of locating and retrieving lost items within the campus premises. Our goal is to reduce the frustration and inefficiency of the traditional manual lost-and-found system by introducing a modern, user-friendly platform accessible to students, teachers, and school administrators. \n\n"
+                    "Lost N Haund is a digital solution developed by Group RAWR to improve the process of locating and retrieving lost items within the campus premises. Our goal is to reduce the frustration and inefficiency of the traditional manual lost-and-found system by introducing a modern, user-friendly platform accessible to students, teachers, and school administrators. \n\n"
                     "We believe that lost items shouldn't stay lost. By leveraging technology, we aim to:\n\n"
                     " • Help owners identify and claim their items faster\n"
                     " • Assist finders in managing reports and returns more efficiently\n"
