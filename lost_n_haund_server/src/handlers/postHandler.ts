@@ -30,7 +30,7 @@ class ItemPostHandler {
           {
             item_category: item_category.length !== 0
               ? { $all: item_category }
-              : { $not: / / }
+              : { $exists: true }
           },
         ]
       }
