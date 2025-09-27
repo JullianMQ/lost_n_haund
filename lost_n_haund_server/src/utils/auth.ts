@@ -4,24 +4,34 @@ import db from "./../db.js"
 import { Resend } from "resend"
 import path from "path"
 import fs from "fs"
+import { admin, bearer, openAPI } from "better-auth/plugins"
 
 process.loadEnvFile()
 const resend = new Resend(process.env.TEST_API_TOKEN)
 
 const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL,
   basePath: "/users/auth",
   database: mongodbAdapter(db),
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
   },
+  advanced: {
+   defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      partitioned: true // New browser standards will mandate this for foreign cookies
+    }
+  },
   autoSignIn: false,
   user: {
     modelName: "authUser",
     deleteUser: {
       enabled: true
-    }
+    },
+    // additionalFields: { 
+    //
+    // }
   },
   emailVerification: {
     sendOnSignUp: true,
@@ -42,6 +52,11 @@ const auth = betterAuth({
       })
     },
   },
+  plugins: [
+    openAPI(),
+    bearer(),
+    admin(),
+  ]
 })
 
 export { auth, resend }

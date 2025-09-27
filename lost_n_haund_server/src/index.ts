@@ -7,11 +7,46 @@ import ClaimsHandler from './handlers/claimsHandler.js'
 import { auth } from './utils/auth.js'
 import { Resend } from 'resend'
 
-export const app = new Hono()
+export const app = new Hono<{
+  Variables: {
+    user: typeof auth.$Infer.Session.user | null;
+    session: typeof auth.$Infer.Session.session | null
+  }
+}>()
 const u = new UserHandler()
 const a = new UserAuthHandler()
 const p = new ItemPostHandler()
 const cl = new ClaimsHandler()
+
+app.use("*", async (c, next) => {
+	const session = await auth.api.getSession({ headers: c.req.raw.headers });
+
+  	if (!session) {
+    	c.set("user", null);
+    	c.set("session", null);
+    	return next();
+  	}
+
+  	c.set("user", session.user);
+  	c.set("session", session.session);
+  	return next();
+});
+
+app.on(["POST", "GET"], "/users/auth/*", (c) => {
+  return auth.handler(c.req.raw);
+});
+
+app.get("/session", (c) => {
+	const session = c.get("session")
+	const user = c.get("user")
+	
+	if(!user) return c.body(null, 401);
+
+  	return c.json({
+	  session,
+	  user
+	});
+});
 
 app.get('/users', async (c) => {
   try {
@@ -30,55 +65,53 @@ app.get('/users', async (c) => {
   }
 })
 
-app.post('/users/auth/sign-up/email', async (c) => {
-  const res = await a.signUp(c)
-  c.status(res.status)
-
-  if (res.status >= 400) {
-    return c.json(res.error)
-  }
-
-  return c.json(res.success)
-})
-
-app.post('/users/auth/sign-in/email', async (c) => {
-  const res = await a.signIn(c)
-  c.status(res.status)
-
-  if (res.status >= 400) {
-    return c.json(res.error)
-  }
-
-  return c.json(res.success)
-})
-
-app.get('/users/auth/verify-email', async (c) => {
-  const name = c.req.query('user_name') ?? ""
-  const email = c.req.query('user_email') ?? ""
-  const [firstName, lastName = ''] = String(name).split(' ')
-  const token = c.req.query('token') ?? ""
-  const callbackURL = c.req.query('callback') ?? "/"
-  const audienceId = '1c5c7e1e-0835-47ce-b903-9ad11db9e206'
-  const resend = new Resend(process.env.API_TOKEN)
-  const res = await auth.api.verifyEmail({
-    query: { token, callbackURL },
-    asResponse: true
-  })
-
-  if (res.status === 200 || res.status === 302) {
-    resend.contacts.create({
-      audienceId,
-      email,
-      unsubscribed: false,
-      firstName,
-      lastName,
-    })
-  }
-
-  return c.json({ message: "Successfully verified your account" })
-})
-
-app.on(["POST", "GET"], "/users/auth/**", (c) => auth.handler(c.req.raw))
+// app.post('/users/auth/sign-up/email', async (c) => {
+//   const res = await a.signUp(c)
+//   c.status(res.status)
+//
+//   if (res.status >= 400) {
+//     return c.json(res.error)
+//   }
+//
+//   return c.json(res.success)
+// })
+//
+// app.post('/users/auth/sign-in/email', async (c) => {
+//   const res = await a.signIn(c)
+//   c.status(res.status)
+//
+//   if (res.status >= 400) {
+//     return c.json(res.error)
+//   }
+//
+//   return c.json(res.success)
+// })
+//
+// app.get('/users/auth/verify-email', async (c) => {
+//   const name = c.req.query('user_name') ?? ""
+//   const email = c.req.query('user_email') ?? ""
+//   const [firstName, lastName = ''] = String(name).split(' ')
+//   const token = c.req.query('token') ?? ""
+//   const callbackURL = c.req.query('callback') ?? "/"
+//   const audienceId = '1c5c7e1e-0835-47ce-b903-9ad11db9e206'
+//   const resend = new Resend(process.env.API_TOKEN)
+//   const res = await auth.api.verifyEmail({
+//     query: { token, callbackURL },
+//     asResponse: true
+//   })
+//
+//   if (res.status === 200 || res.status === 302) {
+//     resend.contacts.create({
+//       audienceId,
+//       email,
+//       unsubscribed: false,
+//       firstName,
+//       lastName,
+//     })
+//   }
+//
+//   return c.json({ message: "Successfully verified your account" })
+// })
 
 // TODO: Implement updating of users only if they are the user
 // and if they are admins
