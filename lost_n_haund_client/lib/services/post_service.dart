@@ -42,11 +42,11 @@ class PostService {
   }) async {
     try {
       final formData = FormData.fromMap({
-        "user_name": "$firstName $lastName",
-        "user_email": email,
+        "name": "$firstName $lastName",
+        "email": email,
         "phone_num": contact,
         "user_id": studentId,
-        "user_pass": password,
+        "password": password,
       });
 
       final response = await _dio.post(
@@ -71,8 +71,8 @@ class PostService {
   }) async {
     try {
       final formData = FormData.fromMap({
-        "user_email": email,
-        "user_pass": password,
+        "email": email,
+        "password": password,
       });
 
       final res = await _dio.post("/users/auth/sign-in/email", data: formData);
@@ -119,7 +119,7 @@ class PostService {
       final formData = FormData.fromMap({
         "first_name": firstName,
         "last_name": lastName,
-        "user_email": email,
+        "email": email,
         "phone_num": contact,
         "user_id": studentId,
         "reference_id": referenceId,

@@ -2,7 +2,7 @@
   "name": "lost_n_haund_server",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch src/index.tsx",
     "build": "tsc",
     "start": "node dist/index.js"
   },
