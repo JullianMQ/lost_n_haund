@@ -4,7 +4,7 @@ import db from "./../db.js";
 import { Resend } from "resend";
 import path from "path";
 import fs from "fs";
-import { admin, bearer, openAPI } from "better-auth/plugins";
+import { admin, openAPI } from "better-auth/plugins";
 
 process.loadEnvFile();
 const resend = new Resend(process.env.TEST_API_TOKEN);
@@ -49,11 +49,11 @@ const auth = betterAuth({
   },
   emailVerification: {
     sendOnSignUp: true,
-    sendVerificationEmail: async ({ user, token, url }, request) => {
+    sendVerificationEmail: async ({ user, token }, request) => {
       const origin = request
       ? new URL(request.url).origin
       : process.env.BETTER_AUTH_URL || "http://localhost:3030";
-      const verifyUrl = `${origin}/users/auth/verify-email?token=${encodeURIComponent(token)}&callbackURL=/users/auth/reference`;
+      const verifyUrl = `${origin}/users/auth/verify-email?token=${encodeURIComponent(token)}&callbackURL=/users/auth/verified`;
 
       const template = path.join(process.cwd(), "src/assets/html/email.html");
       // turned into string so we can replace the template with javascript
@@ -75,12 +75,12 @@ const auth = betterAuth({
         audienceId: "1c5c7e1e-0835-47ce-b903-9ad11db9e206",
         email: user.email,
         unsubscribed: false,
-        firstName: user.name[0],
-        lastName: user.name[1],
+        firstName: user.name.split(" ")[0],
+        lastName: user.name.split(" ")[1],
       });
     },
   },
-  plugins: [openAPI(), bearer(), admin()],
+  plugins: [openAPI(), admin()],
 });
 
 export { auth, resend };

@@ -16,13 +16,22 @@ const u = new UserHandler();
 const p = new ItemPostHandler();
 const cl = new ClaimsHandler();
 
+app.get("/users/auth/verified", async (c) => {
+  const message = "You may now enter the app!";
+  return c.html(<Top message={message} />);
+});
+
+app.on(["POST", "GET"], "/users/auth/*", (c) => {
+  return auth.handler(c.req.raw);
+});
+
 app.use("*", async (c, next) => {
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
 
   if (!session) {
     c.set("user", null);
     c.set("session", null);
-    return next();
+    return c.json({ message: "Unauthorized" }, 401);
   }
 
   c.set("user", session.user);
@@ -30,13 +39,20 @@ app.use("*", async (c, next) => {
   return next();
 });
 
-app.get("/users/auth/verified", async (c) => {
-  const message = "You may now enter the app!";
-  return c.html(<Top message={message} />);
-})
+app.use("/users/*", async (c, next) => {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
 
-app.on(["POST", "GET"], "/users/auth/*", (c) => {
-  return auth.handler(c.req.raw);
+  if (!session) {
+    c.set("user", null);
+    c.set("session", null);
+    return c.json({ message: "Unauthorized" }, 401);
+  }
+
+  if (session.user.user_role !== "Admin") {
+    return c.json({ message: "Unauthorized" }, 401);
+  }
+
+  return next();
 });
 
 app.get("/users", async (c) => {
@@ -55,56 +71,9 @@ app.get("/users", async (c) => {
   }
 });
 
-// app.post('/users/auth/sign-up/email', async (c) => {
-//   const res = await a.signUp(c)
-//   c.status(res.status)
-//
-//   if (res.status >= 400) {
-//     return c.json(res.error)
-//   }
-//
-//   return c.json(res.success)
-// })
-//
-// app.post('/users/auth/sign-in/email', async (c) => {
-//   const res = await a.signIn(c)
-//   c.status(res.status)
-//
-//   if (res.status >= 400) {
-//     return c.json(res.error)
-//   }
-//
-//   return c.json(res.success)
-// })
-//
-// app.get('/users/auth/verify-email', async (c) => {
-//   const name = c.req.query('user_name') ?? ""
-//   const email = c.req.query('user_email') ?? ""
-//   const [firstName, lastName = ''] = String(name).split(' ')
-//   const token = c.req.query('token') ?? ""
-//   const callbackURL = c.req.query('callback') ?? "/"
-//   const audienceId = '1c5c7e1e-0835-47ce-b903-9ad11db9e206'
-//   const resend = new Resend(process.env.API_TOKEN)
-//   const res = await auth.api.verifyEmail({
-//     query: { token, callbackURL },
-//     asResponse: true
-//   })
-//
-//   if (res.status === 200 || res.status === 302) {
-//     resend.contacts.create({
-//       audienceId,
-//       email,
-//       unsubscribed: false,
-//       firstName,
-//       lastName,
-//     })
-//   }
-//
-//   return c.json({ message: "Successfully verified your account" })
-// })
-
 // TODO: Implement updating of users only if they are the user
-// and if they are admins
+
+// DONE: and if they are admins
 app.put("/users/:id", async (c) => {
   const res = await u.updateUser(c);
   c.status(res.status);
@@ -118,7 +87,8 @@ app.put("/users/:id", async (c) => {
 });
 
 // TODO: Implement deletion of users only if they are the user
-// and if they are admins
+
+// DONE: and if they are admins
 app.delete("/users/:id", async (c) => {
   const res = await u.deleteUser(c);
   c.status(res.status);
