@@ -12,7 +12,6 @@ import { zodPostsSchema, nullPostsSchema, type postsSchema } from './../utils/po
 import { localToUTC, phTime } from './../utils/dateTimeConversion.js'
 import db from './../db.js'
 import { auth, resend } from './../utils/auth.js';
-import { getSessionQuerySchema } from 'better-auth/api'
 
 // TODO: Maybe there's a way to upload the file directly? than saving it first in the server
 // Although we could do more operations(checking, minify, conversion etc.)
@@ -32,7 +31,6 @@ const oauth2Client = new google.auth.OAuth2(
 
 oauth2Client.setCredentials({ refresh_token: REFRESH_TOKEN })
 const drive = google.drive({ version: 'v3', auth: oauth2Client })
-const usersDB = db.collection('users')
 const authUsersDB = db.collection('authUser')
 const accountDB = db.collection('account')
 const audienceId = '1c5c7e1e-0835-47ce-b903-9ad11db9e206'
@@ -51,14 +49,14 @@ class UserHandler {
       // const query = { name: {$regex: /john .*/i} }
       const query = {
         $and: [
-          { user_name: regexOrAll(user_name) },
+          { name: regexOrAll(user_name) },
+          { email: regexOrAll(user_email) },
           { user_id: regexOrAll(user_id) },
-          { user_email: regexOrAll(user_email) },
           { phone_num: regexOrAll(phone_num) },
           { user_role: regexOrAll(user_role) },
         ]
       }
-      const users = await usersDB.find(query).skip(page).limit(20).toArray()
+      const users = await authUsersDB.find(query).skip(page).limit(20).toArray()
       return users
 
     } catch (e) {
@@ -71,7 +69,7 @@ class UserHandler {
     let error = NewError("")
     console.log("phone_num", phone_num)
     try {
-      const res = await usersDB.insertOne({
+      const res = await authUsersDB.insertOne({
         user_name,
         user_email,
         phone_num,
@@ -133,7 +131,7 @@ class UserHandler {
     }
 
     try {
-      const res = await usersDB.findOne(filter)
+      const res = await authUsersDB.findOne(filter)
       if (!res) {
         return {
           status: 404,
@@ -156,7 +154,7 @@ class UserHandler {
       }
 
       const update = { $set: updateUserValues }
-      const resMongo = await usersDB.updateOne(filter, update)
+      const resMongo = await authUsersDB.updateOne(filter, update)
       if (!resMongo.acknowledged) {
         return {
           status: 503,
@@ -196,7 +194,7 @@ class UserHandler {
     const filter = { user_id: user_id }
 
     try {
-      const res = await usersDB.findOne(filter)
+      const res = await authUsersDB.findOne(filter)
       if (!res) {
         return {
           status: 404,
@@ -216,7 +214,7 @@ class UserHandler {
         }
       }
 
-      const resUsersMongo = await usersDB.deleteOne(filter)
+      const resUsersMongo = await authUsersDB.deleteOne(filter)
       if (!resUsersMongo.acknowledged) {
         return {
           status: 503,

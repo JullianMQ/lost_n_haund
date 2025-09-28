@@ -5,6 +5,7 @@ import ItemPostHandler from "./handlers/postHandler.js";
 import ClaimsHandler from "./handlers/claimsHandler.js";
 import { Top } from "./pages/verified.js";
 import { auth } from "./utils/auth.js";
+import { authMiddleware } from "./middleware/authMiddleware.js";
 
 export const app = new Hono<{
   Variables: {
@@ -25,35 +26,7 @@ app.on(["POST", "GET"], "/users/auth/*", (c) => {
   return auth.handler(c.req.raw);
 });
 
-app.use("*", async (c, next) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
-
-  if (!session) {
-    c.set("user", null);
-    c.set("session", null);
-    return c.json({ message: "Unauthorized" }, 401);
-  }
-
-  c.set("user", session.user);
-  c.set("session", session.session);
-  return next();
-});
-
-app.use("/users/*", async (c, next) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
-
-  if (!session) {
-    c.set("user", null);
-    c.set("session", null);
-    return c.json({ message: "Unauthorized" }, 401);
-  }
-
-  if (session.user.user_role !== "Admin") {
-    return c.json({ message: "Unauthorized" }, 401);
-  }
-
-  return next();
-});
+app.use("/users/*", authMiddleware);
 
 app.get("/users", async (c) => {
   try {
@@ -72,8 +45,6 @@ app.get("/users", async (c) => {
 });
 
 // TODO: Implement updating of users only if they are the user
-
-// DONE: and if they are admins
 app.put("/users/:id", async (c) => {
   const res = await u.updateUser(c);
   c.status(res.status);
@@ -87,8 +58,6 @@ app.put("/users/:id", async (c) => {
 });
 
 // TODO: Implement deletion of users only if they are the user
-
-// DONE: and if they are admins
 app.delete("/users/:id", async (c) => {
   const res = await u.deleteUser(c);
   c.status(res.status);
