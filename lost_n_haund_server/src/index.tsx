@@ -5,7 +5,7 @@ import ItemPostHandler from "./handlers/postHandler.js";
 import ClaimsHandler from "./handlers/claimsHandler.js";
 import { Top } from "./pages/verified.js";
 import { auth } from "./utils/auth.js";
-import { authMiddleware } from "./middleware/authMiddleware.js";
+import { requireAdmin, requireAuth } from "./middleware/authMiddleware.js";
 
 export const app = new Hono<{
   Variables: {
@@ -26,7 +26,8 @@ app.on(["POST", "GET"], "/users/auth/*", (c) => {
   return auth.handler(c.req.raw);
 });
 
-app.use("/users/*", authMiddleware);
+app.use("*", requireAuth);
+app.use("/users/*", requireAdmin);
 
 app.get("/users", async (c) => {
   try {
@@ -44,7 +45,6 @@ app.get("/users", async (c) => {
   }
 });
 
-// TODO: Implement updating of users only if they are the user
 app.put("/users/:id", async (c) => {
   const res = await u.updateUser(c);
   c.status(res.status);
@@ -57,7 +57,6 @@ app.put("/users/:id", async (c) => {
   return c.json(res.success);
 });
 
-// TODO: Implement deletion of users only if they are the user
 app.delete("/users/:id", async (c) => {
   const res = await u.deleteUser(c);
   c.status(res.status);

@@ -9,6 +9,7 @@ import { admin, openAPI } from "better-auth/plugins";
 process.loadEnvFile();
 const resend = new Resend(process.env.TEST_API_TOKEN);
 
+const audienceId = "1c5c7e1e-0835-47ce-b903-9ad11db9e206";
 const auth = betterAuth({
   basePath: "/users/auth",
   database: mongodbAdapter(db),
@@ -26,6 +27,9 @@ const auth = betterAuth({
   autoSignIn: false,
   user: {
     modelName: "authUser",
+    updateUser: {
+      enabled: true,
+    },
     deleteUser: {
       enabled: true,
     },
@@ -47,12 +51,51 @@ const auth = betterAuth({
       },
     },
   },
+  // TODO: CREATE HOOK FOR UPDATING AND DELETING USER
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          resend.contacts.create({
+            audienceId: "1c5c7e1e-0835-47ce-b903-9ad11db9e206",
+            email: user.email,
+            unsubscribed: false,
+            firstName: user.name.split(" ")[0],
+            lastName: user.name.split(" ")[1],
+          });
+        },
+      },
+      update: {
+        before: async (user, ctx) => {
+          console.log("user", user);
+
+          // resend.contacts.update({
+          //   email: user.email,
+          //   audienceId: audienceId,
+          //   firstName: user.name?.split(" ")[0],
+          //   lastName: user.name?.split(" ")[1],
+          // });
+        },
+        after: async (user, context) => {
+          console.log("user.name", user.name);
+        },
+      },
+      // delete: {
+      //   before: async (user) => {
+      //     resend.contacts.remove({
+      //       email: user.email,
+      //       audienceId: audienceId,
+      //     });
+      //   },
+      // },
+    },
+  },
   emailVerification: {
     sendOnSignUp: true,
     sendVerificationEmail: async ({ user, token }, request) => {
       const origin = request
-      ? new URL(request.url).origin
-      : process.env.BETTER_AUTH_URL || "http://localhost:3030";
+        ? new URL(request.url).origin
+        : process.env.BETTER_AUTH_URL || "http://localhost:3030";
       const verifyUrl = `${origin}/users/auth/verify-email?token=${encodeURIComponent(token)}&callbackURL=/users/auth/verified`;
 
       const template = path.join(process.cwd(), "src/assets/html/email.html");
@@ -68,15 +111,6 @@ const auth = betterAuth({
         to: user.email,
         subject: "Verify your email address",
         html: html,
-      });
-    },
-    afterEmailVerification: async (user) => {
-      resend.contacts.create({
-        audienceId: "1c5c7e1e-0835-47ce-b903-9ad11db9e206",
-        email: user.email,
-        unsubscribed: false,
-        firstName: user.name.split(" ")[0],
-        lastName: user.name.split(" ")[1],
       });
     },
   },

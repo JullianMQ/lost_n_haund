@@ -1,6 +1,7 @@
 import z from "zod"
 
 export const zodPostsSchema = z.object({
+  owner_id: z.string(),
   item_name: z.string(),
   item_category: z.array(z.string()),
   description: z.string(),
