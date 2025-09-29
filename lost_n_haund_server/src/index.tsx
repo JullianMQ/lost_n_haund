@@ -11,7 +11,7 @@ export const app = new Hono<{
   Variables: {
     user: typeof auth.$Infer.Session.user | null;
     session: typeof auth.$Infer.Session.session | null;
-  };
+  }
 }>();
 const u = new UserHandler();
 const p = new ItemPostHandler();
@@ -22,14 +22,16 @@ app.get("/users/auth/verified", async (c) => {
   return c.html(<Top message={message} />);
 });
 
+app.use("/claims/*", requireAuth);
+app.use("/posts/*", requireAuth);
+app.use("/user/*", requireAdmin);
+app.use("/users/auth/delete-user", requireAuth);
+
 app.on(["POST", "GET"], "/users/auth/*", (c) => {
   return auth.handler(c.req.raw);
 });
 
-app.use("*", requireAuth);
-app.use("/users/*", requireAdmin);
-
-app.get("/users", async (c) => {
+app.get("/user", async (c) => {
   try {
     const users = await u.getUsers(c);
     if (!users) {
@@ -45,29 +47,29 @@ app.get("/users", async (c) => {
   }
 });
 
-app.put("/users/:id", async (c) => {
-  const res = await u.updateUser(c);
-  c.status(res.status);
-
-  if (res.status >= 400 && res.status <= 511) {
-    // supported error codes from hono
-    return c.json(res.error);
-  }
-
-  return c.json(res.success);
-});
-
-app.delete("/users/:id", async (c) => {
-  const res = await u.deleteUser(c);
-  c.status(res.status);
-
-  if (res.status >= 400 && res.status <= 511) {
-    // supported error codes from hono
-    return c.json(res.error);
-  }
-
-  return c.json(res.success);
-});
+// app.put("/custom/users/:id", async (c) => {
+//   const res = await u.updateUser(c);
+//   c.status(res.status);
+//
+//   if (res.status >= 400 && res.status <= 511) {
+//     // supported error codes from hono
+//     return c.json(res.error);
+//   }
+//
+//   return c.json(res.success);
+// });
+//
+// app.delete("/custom/users/:id", async (c) => {
+//   const res = await u.deleteUser(c);
+//   c.status(res.status);
+//
+//   if (res.status >= 400 && res.status <= 511) {
+//     // supported error codes from hono
+//     return c.json(res.error);
+//   }
+//
+//   return c.json(res.success);
+// });
 
 app.get("/posts", async (c) => {
   try {

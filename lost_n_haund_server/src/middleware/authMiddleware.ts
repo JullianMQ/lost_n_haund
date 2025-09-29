@@ -1,7 +1,12 @@
 import { createMiddleware } from 'hono/factory'
 import { auth } from "../utils/auth.js";
 
-const requireAuth = createMiddleware(async (c, next) => {
+const requireAuth = createMiddleware<{
+  Variables: {
+    user: typeof auth.$Infer.Session.user | null;
+    session: typeof auth.$Infer.Session.session | null;
+  }
+}>(async (c, next) => {
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
 
   if (!session) {
@@ -13,7 +18,12 @@ const requireAuth = createMiddleware(async (c, next) => {
   return next();
 })
 
-const requireAdmin = createMiddleware(async (c, next) => {
+const requireAdmin = createMiddleware<{
+  Variables: {
+    user: typeof auth.$Infer.Session.user | null;
+    session: typeof auth.$Infer.Session.session | null;
+  }
+}>(async (c, next) => {
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
 
   if (!session || session.user.user_role !== "Admin") {

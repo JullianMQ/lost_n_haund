@@ -1,10 +1,10 @@
-import { betterAuth } from "better-auth";
+import { APIError, betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import db from "./../db.js";
 import { Resend } from "resend";
 import path from "path";
 import fs from "fs";
-import { admin, openAPI } from "better-auth/plugins";
+import { admin, createAuthMiddleware, openAPI } from "better-auth/plugins";
 
 process.loadEnvFile();
 const resend = new Resend(process.env.TEST_API_TOKEN);
@@ -52,43 +52,73 @@ const auth = betterAuth({
     },
   },
   // TODO: CREATE HOOK FOR UPDATING AND DELETING USER
-  databaseHooks: {
-    user: {
-      create: {
-        after: async (user) => {
-          resend.contacts.create({
-            audienceId: "1c5c7e1e-0835-47ce-b903-9ad11db9e206",
-            email: user.email,
-            unsubscribed: false,
-            firstName: user.name.split(" ")[0],
-            lastName: user.name.split(" ")[1],
-          });
-        },
-      },
-      update: {
-        before: async (user, ctx) => {
-          console.log("user", user);
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path.match("/sign-up/email")) {
+        await resend.contacts.create({
+          audienceId: audienceId,
+          email: ctx.body.email,
+          unsubscribed: false,
+          firstName: ctx.body.name.split(" ")[0],
+          lastName: ctx.body.name.split(" ")[1],
+        });
+      }
 
-          // resend.contacts.update({
-          //   email: user.email,
-          //   audienceId: audienceId,
-          //   firstName: user.name?.split(" ")[0],
-          //   lastName: user.name?.split(" ")[1],
-          // });
-        },
-        after: async (user, context) => {
-          console.log("user.name", user.name);
-        },
-      },
-      // delete: {
-      //   before: async (user) => {
-      //     resend.contacts.remove({
-      //       email: user.email,
-      //       audienceId: audienceId,
-      //     });
-      //   },
-      // },
-    },
+      if (ctx.path.match("/delete-user")) {
+        const email = ctx.body.email;
+        if (!email) {
+          throw new APIError("BAD_REQUEST", {
+            message: "No email provided"
+          })
+        }
+
+        try {
+          const res = await resend.contacts.remove({ // why tf don't this work
+            email: email,
+            audienceId: audienceId,
+          });
+
+          console.log(res);
+
+          if (res.error !== null) {
+            console.log(res);
+            throw new APIError("SERVICE_UNAVAILABLE", {
+              message: "Resend Service unavailable"
+            })
+          }
+        } catch (e) {
+          console.log(e);
+          throw new APIError("SERVICE_UNAVAILABLE", {
+            message: "Resend Service unavailable"
+          })
+        }
+      }
+    }),
+    after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path.match("/update-user")) {
+        const email = ctx.context.session?.user.email;
+        if (!email) {
+          throw new APIError("NOT_FOUND", {
+            message: "User not found"
+          })
+        }
+
+        try {
+          await resend.contacts.update({
+            email: email,
+            audienceId: audienceId,
+            firstName: ctx.body.name.split(" ")[0],
+            lastName: ctx.body.name.split(" ")[1],
+          });
+        } catch (e) {
+          console.log(e);
+          throw new APIError("SERVICE_UNAVAILABLE", {
+            message: "Resend Service unavailable"
+          })
+        }
+      }
+
+    })
   },
   emailVerification: {
     sendOnSignUp: true,
