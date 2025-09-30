@@ -3,19 +3,23 @@ import 'package:lost_n_haund_client/pages/form_page.dart';
 import 'package:lost_n_haund_client/pages/contact_page.dart';
 import 'package:lost_n_haund_client/pages/about_us_page.dart';
 import 'package:lost_n_haund_client/pages/home_page.dart';
+import 'package:lost_n_haund_client/pages/login_page.dart';
+import 'package:lost_n_haund_client/pages/admin_lost_claim.dart';
+import 'package:lost_n_haund_client/pages/admin_item_info.dart';
+import 'package:lost_n_haund_client/pages/admin_item_claim.dart';
 
 class CustomDrawer extends StatelessWidget {
-  const CustomDrawer({super.key});
+  final bool isAdmin;
+  const CustomDrawer({super.key, this.isAdmin = false});
 
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      backgroundColor: const Color(0xFF800020), 
+      backgroundColor: const Color(0xFF800020),
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
                 children: [
@@ -32,56 +36,50 @@ class CustomDrawer extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              buttonOption(
-                context,
-                "Home",
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => HomePage()),
-                  );
-                },
-              ),
-              buttonOption(
-                context,
-                "Form",
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => FormPage()),
-                  );
-                },
-              ),
-              buttonOption(
-                context,
-                "About",
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AboutUsPage()),
-                  );
-                },
+              Expanded(
+                child: ListView(
+                  children: isAdmin
+                      ? [
+                          buttonOption(context, "Dashboard", AdminPage()),
+                          buttonOption(context, "Item Info", AdminItemInfo()),
+                          buttonOption(context, "Item Accept", AdminItemAccept()),
+                        ]
+                      : [
+                          buttonOption(context, "Home", HomePage()),
+                          buttonOption(context, "Form", FormPage()),
+                          buttonOption(context, "About", AboutUsPage()),
+                          buttonOption(context, "Contact Us", ContactUsPage()),
+                        ],
+                ),
               ),
 
-            buttonOption(
-                context,
-                "Contact Us",
-                onTap: () {
-                  Navigator.pop(context); 
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ContactUsPage()),
-                  );
-                },
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      side: const BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context); 
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginPage()),
+                      (route) => false, 
+                    );
+                  },
+                  child: const Text("Logout", style: TextStyle(fontSize: 16)),
+                ),
               ),
 
-              const Spacer(),
-              const Text(
-                "© 2025 HAU",
-                style: TextStyle(color: Colors.white70, fontSize: 12),
+              const SizedBox(height: 10),
+              Text(
+                isAdmin ? "© 2025 HAU Admin" : "© 2025 HAU",
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -91,7 +89,7 @@ class CustomDrawer extends StatelessWidget {
     );
   }
 
-  Widget buttonOption(BuildContext context, String text, {VoidCallback? onTap}) {
+  Widget buttonOption(BuildContext context, String text, Widget page) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: ElevatedButton(
@@ -103,15 +101,19 @@ class CustomDrawer extends StatelessWidget {
             side: const BorderSide(color: Colors.white),
           ),
         ),
-        onPressed: onTap ?? () => Navigator.pop(context),
+        onPressed: () {
+          Navigator.pop(context); 
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => page),
+          );
+        },
         child: Text(text, style: const TextStyle(fontSize: 16)),
       ),
     );
   }
-
 }
 
-// Header
 class Header extends StatelessWidget implements PreferredSizeWidget {
   const Header({super.key});
 
@@ -147,11 +149,13 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
         ],
       ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.menu, color: Color(0xFF800020)),
-          onPressed: () {
-            Scaffold.of(context).openEndDrawer(); 
-          },
+        Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Color(0xFF800020)),
+            onPressed: () {
+              Scaffold.of(context).openEndDrawer();
+            },
+          ),
         ),
       ],
     );

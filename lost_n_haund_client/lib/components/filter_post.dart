@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lost_n_haund_client/services/post_service.dart';
 
-class FilterProvider with ChangeNotifier {
+class PostFilterProvider with ChangeNotifier {
   final PostService _postService = PostService();
 
   String _selectedCategory = '';
@@ -11,13 +11,16 @@ class FilterProvider with ChangeNotifier {
   List _posts = [];
   bool _isLoading = false;
 
-  String get selectedCategory => _selectedCategory.isEmpty ? "Category" : _selectedCategory;
-  String get selectedLocation => _selectedLocation.isEmpty ? "Location" : _selectedLocation;
+  String get selectedCategory =>
+      _selectedCategory.isEmpty ? "Category" : _selectedCategory;
+  String get selectedLocation =>
+      _selectedLocation.isEmpty ? "Location" : _selectedLocation;
   String get searchQuery => _searchQuery.isEmpty ? "Search" : _searchQuery;
+
   List get posts => _posts;
   bool get isLoading => _isLoading;
 
-  FilterProvider() {
+  PostFilterProvider() {
     fetchPosts();
   }
 
@@ -29,7 +32,7 @@ class FilterProvider with ChangeNotifier {
       final res = await _postService.getFilteredPosts(
         categories: _selectedCategory.isNotEmpty ? [_selectedCategory] : null,
         location: _selectedLocation.isNotEmpty ? _selectedLocation : null,
-        name: _searchQuery.isNotEmpty ? _searchQuery : null, 
+        name: _searchQuery.isNotEmpty ? _searchQuery : null,
       );
 
       if (res.statusCode == 200) {
@@ -62,8 +65,10 @@ class FilterProvider with ChangeNotifier {
 
   void sortByDate() {
     _posts.sort((a, b) {
-      DateTime dateA = DateTime.tryParse(a['date_found'] ?? '') ?? DateTime(1970);
-      DateTime dateB = DateTime.tryParse(b['date_found'] ?? '') ?? DateTime(1970);
+      DateTime dateA =
+          DateTime.tryParse(a['date_found'] ?? '') ?? DateTime(1970);
+      DateTime dateB =
+          DateTime.tryParse(b['date_found'] ?? '') ?? DateTime(1970);
       return dateB.compareTo(dateA);
     });
     notifyListeners();

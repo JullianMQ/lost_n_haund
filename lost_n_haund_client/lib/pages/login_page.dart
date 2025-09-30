@@ -1,169 +1,180 @@
 import 'package:flutter/material.dart';
-import 'package:lost_n_haund_client/components/my_button.dart';
-import 'package:lost_n_haund_client/components/my_textfield.dart';
-import 'package:lost_n_haund_client/pages/home_page.dart';
-import 'package:lost_n_haund_client/pages/register_page.dart';
 import 'package:lost_n_haund_client/services/post_service.dart';
+import 'package:lost_n_haund_client/pages/admin_lost_claim.dart';
+import 'package:lost_n_haund_client/pages/home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class LoginPageState extends State<LoginPage> {
-  //text controllers
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final PostService _postService = PostService();
 
-  final PostService postService = PostService();
-  bool isLoading = false;
+  bool _isLoading = false;
+  String? _errorMessage;
 
-  Future<void> signUserIn() async {
-    final email = emailController.text.trim();
-    final password = passwordController.text.trim();
+  void _login() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
-    setState(() => isLoading = true);
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
 
     try {
-      final res = await postService.loginUser(
+      final res = await _postService.loginUser(
         email: email,
         password: password,
       );
 
-      if (!mounted) return;
+      if (res.statusCode == 200) {
+        final data = res.data as Map<String, dynamic>;
 
-      if (res.statusCode == 200 || res.statusCode == 201) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage()),
-        );
+        final token = data["token"];
+        final user = data["user"] as Map<String, dynamic>? ?? {};
+
+        final name = user["name"]?.toString().toLowerCase() ?? "";
+        final userEmail = user["email"]?.toString().toLowerCase() ?? "";
+
+        print("Login success. Token: $token");
+        print("User: $user");
+
+        if (name.contains("admin") || userEmail.contains("admin")) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => AdminPage()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage()),
+          );
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              (res.data is Map ? res.data["error"] : res.data.toString()) ??
-                  "Failed to post",
-            ),
-          ),
-        );
+        setState(() {
+          _errorMessage =
+              res.data is Map && res.data["message"] != null
+                  ? res.data["message"]
+                  : "Login failed with status ${res.statusCode}";
+        });
       }
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+      setState(() {
+        _errorMessage = "Error: $e";
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
-  }
+}
+
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage("images/bg-hau.jpg"),
             fit: BoxFit.cover,
           ),
         ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              child: Container(
-                margin: const EdgeInsets.all(20),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Color(0xFF800020),
-                  borderRadius: BorderRadius.circular(15),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Card(
+                elevation: 6,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      "Login Form",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                color: const Color(0xFF7B001E),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        "Login",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    //email
-                    MyTextfield(
-                      controller: emailController,
-                      hintText: 'Email',
-                      obscureText: false,
-                      maxLines: 1,
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    //pass
-                    MyTextfield(
-                      controller: passwordController,
-                      hintText: 'Password',
-                      obscureText: true,
-                      maxLines: 1,
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            "Forgot Password?",
-                            style: TextStyle(color: Colors.white),
+                      const SizedBox(height: 20),
+                      TextField(
+                        controller: _emailController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          labelText: "Email",
+                          labelStyle: const TextStyle(color: Colors.white),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        ],
+                          prefixIcon: const Icon(Icons.email),
+                          prefixIconColor: Colors.white,
+                        ),
                       ),
-                    ),
-
-                    MyButton(
-                      buttonText: "Sign In",
-                      // onTap: isLoading ? null : signUserIn,
-                      onTap: () async {
-                        await signUserIn();
-                      },
-                    ),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _passwordController,
+                        style: const TextStyle(color: Colors.white),
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          labelText: "Password",
+                          labelStyle: const TextStyle(color: Colors.white),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: const Icon(Icons.lock),
+                          prefixIconColor: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      if (_errorMessage != null)
                         Text(
-                          'Not a member?',
-                          style: TextStyle(color: Colors.white),
+                          _errorMessage!,
+                          style: const TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
                         ),
-
-                        const SizedBox(width: 4),
-
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => RegisterPage(),
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            'Register now',
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _login,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: const BorderSide(color: Colors.white),
                             ),
+                            backgroundColor: const Color(0xFF7B001E),
                           ),
+                          child: _isLoading
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                              : const Text(
+                                  "Login",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

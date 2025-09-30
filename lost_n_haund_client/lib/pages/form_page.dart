@@ -521,7 +521,7 @@ class _FormPageState extends State<FormPage> {
                               }
 
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("${res.data}")), // For unsuccessful claims
+                                SnackBar(content: Text("${res.data}")), 
                               );
                             } else {
                               final res = await api.createLostItem(

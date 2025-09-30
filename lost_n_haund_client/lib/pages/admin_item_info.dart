@@ -8,10 +8,11 @@ class AdminItemInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(75),
-        child: Header(),
+      appBar: AppBar(
+        title: const Text("Admin Item Info"),
+        backgroundColor: const Color(0xFF800020),
       ),
+      drawer: Header(), 
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
@@ -42,10 +43,7 @@ class AdminItemInfo extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const Divider(
-                    color: Colors.white,
-                    thickness: 2,
-                  ),
+                  const Divider(color: Colors.white, thickness: 2),
                   const Center(
                     child: Text(
                       "Reference ID",
@@ -94,10 +92,7 @@ class AdminItemInfo extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const Divider(
-                    color: Colors.white,
-                    thickness: 2,
-                  ),
+                  const Divider(color: Colors.white, thickness: 2),
                   const SizedBox(height: 10),
 
                   const Text(
@@ -108,7 +103,7 @@ class AdminItemInfo extends StatelessWidget {
                     "Location Found: \n"
                     "Status: \n"
                     "Reference ID: ",
-                    textAlign: TextAlign.left, 
+                    textAlign: TextAlign.left,
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.white,
@@ -132,7 +127,6 @@ class AdminItemInfo extends StatelessWidget {
             ),
           ),
         ),
-        
       ),
     );
   }

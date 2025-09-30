@@ -3,7 +3,7 @@ import 'package:lost_n_haund_client/components/header.dart';
 import 'package:lost_n_haund_client/components/filter_button.dart';
 import 'package:lost_n_haund_client/components/my_textfield.dart';
 import 'package:lost_n_haund_client/components/item_card.dart';
-import 'package:lost_n_haund_client/components/filter.dart';
+import 'package:lost_n_haund_client/components/filter_post.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatelessWidget {
@@ -14,13 +14,12 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final filterProvider = Provider.of<FilterProvider>(context, listen: false);
+    final filterProvider = Provider.of<PostFilterProvider>(context, listen: false);
 
     return Scaffold(
       appBar: const PreferredSize(
         preferredSize: Size.fromHeight(75),
-        child: Header(),
-      ),
+        child: Header()),
       endDrawer: CustomDrawer(),
       body: Column(
         children: [
@@ -66,7 +65,7 @@ class HomePage extends StatelessWidget {
                       obscureText: false,
                       maxLines: 1,
                       onChanged: (val) {
-                        context.read<FilterProvider>().setSearchQuery(val);
+                        context.read<PostFilterProvider>().setSearchQuery(val);
                       },
                     ),
                     const SizedBox(height: 15),
@@ -81,7 +80,7 @@ class HomePage extends StatelessWidget {
                           },
                         ),
 
-                        Consumer<FilterProvider>(
+                        Consumer<PostFilterProvider>(
                           builder: (context, provider, _) {
                             return PopupMenuButton<String>(
                               onSelected: (value) {
@@ -100,7 +99,7 @@ class HomePage extends StatelessWidget {
                           },
                         ),
 
-                        Consumer<FilterProvider>(
+                        Consumer<PostFilterProvider>(
                           builder: (context, provider, _) {
                             return PopupMenuButton<String>(
                               onSelected: (value) {
@@ -146,7 +145,7 @@ class HomePage extends StatelessWidget {
           const SizedBox(height: 10),
 
           Expanded(
-            child: Consumer<FilterProvider>(
+            child: Consumer<PostFilterProvider>(
               builder: (context, provider, child) {
                 if (provider.posts.isEmpty) {
                   return const Center(
