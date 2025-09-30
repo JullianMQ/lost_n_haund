@@ -5,7 +5,7 @@ import ItemPostHandler from "./handlers/postHandler.js";
 import ClaimsHandler from "./handlers/claimsHandler.js";
 import { Top } from "./pages/verified.js";
 import { auth } from "./utils/auth.js";
-import { addOwnerId, requireAdmin, requireAuth } from "./middleware/authMiddleware.js";
+import { addOwnerId, availableClaims, canAccessClaim, canDeletePost, canUpdatePost, requireAdmin, requireAuth } from "./middleware/authMiddleware.js";
 
 export const app = new Hono<{
   Variables: {
@@ -22,13 +22,10 @@ app.get("/users/auth/verified", async (c) => {
   return c.html(<Top message={message} />);
 });
 
-// TODO: CREATE MIDDLEWARE FOR ADMINS, MODERATORS, STUDENTS
-// ==> ADMINS - able to do anything
-// ==> MODERATORS - accept and deny claims, delete posts
-// ==> STUDENTS - create, update, delete their specific posts/claims/accounts
-app.use("/claims/*", requireAuth);
+// could use the owner_id incase admins what to log which user are accessing the resource, not implemented yet
+app.use("/claims/*", requireAuth, addOwnerId);
 app.use("/posts/*", requireAuth, addOwnerId);
-app.use("/user/*", requireAdmin);
+app.use("/user/*", requireAdmin, addOwnerId);
 
 app.on(["POST", "GET"], "/users/auth/*", (c) => {
   return auth.handler(c.req.raw);
@@ -71,50 +68,7 @@ app.post("/posts", async (c) => {
   return c.json(res.success);
 });
 
-app.get("/claims", async (c) => {
-  try {
-    const claims = await cl.getClaimPosts(c);
-    return c.json(claims);
-  } catch (e) {
-    console.error(`Unexpected error ${e}`);
-    return c.json({ error: "Internal server error" }, 500);
-  }
-});
-
-app.post("/claims", async (c) => {
-  const res = await cl.createClaimItemPost(c);
-  c.status(res.status);
-  if (res.status >= 400 && res.status <= 511) {
-    // supported error codes from hono
-    return c.json(res.error);
-  }
-
-  return c.json(res.success);
-});
-
-app.put("/claims/:id", async (c) => {
-  const res = await cl.updateClaimPost(c);
-  c.status(res.status);
-  if (res.status >= 400 && res.status <= 511) {
-    // supported error codes from hono
-    return c.json(res.error);
-  }
-
-  return c.json(res.success);
-});
-
-app.delete("/claims/:id", async (c) => {
-  const res = await cl.deleteClaimPost(c);
-  c.status(res.status);
-  if (res.status >= 400 && res.status <= 511) {
-    // supported error codes from hono
-    return c.json(res.error);
-  }
-
-  return c.json(res.success);
-});
-
-app.put("/posts/:id", async (c) => {
+app.put("/posts/:id", canUpdatePost, async (c) => {
   const res = await p.updateItemPost(c);
   c.status(res.status);
 
@@ -126,7 +80,7 @@ app.put("/posts/:id", async (c) => {
   return c.json(res.success);
 });
 
-app.delete("/posts/:id", async (c) => {
+app.delete("/posts/:id", canDeletePost, async (c) => {
   const res = await p.deletePost(c);
   c.status(res.status);
 
@@ -138,7 +92,50 @@ app.delete("/posts/:id", async (c) => {
   return c.json(res.success);
 });
 
-app.post("/upload", async (c) => {
+app.get("/claims", availableClaims, async (c) => {
+  try {
+    const claims = await cl.getClaimPosts(c);
+    return c.json(claims);
+  } catch (e) {
+    console.error(`Unexpected error ${e}`);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+app.post("/claims", canAccessClaim, async (c) => {
+  const res = await cl.createClaimItemPost(c);
+  c.status(res.status);
+  if (res.status >= 400 && res.status <= 511) {
+    // supported error codes from hono
+    return c.json(res.error);
+  }
+
+  return c.json(res.success);
+});
+
+app.put("/claims/:id", canAccessClaim, async (c) => {
+  const res = await cl.updateClaimPost(c);
+  c.status(res.status);
+  if (res.status >= 400 && res.status <= 511) {
+    // supported error codes from hono
+    return c.json(res.error);
+  }
+
+  return c.json(res.success);
+});
+
+app.delete("/claims/:id", canAccessClaim, async (c) => {
+  const res = await cl.deleteClaimPost(c);
+  c.status(res.status);
+  if (res.status >= 400 && res.status <= 511) {
+    // supported error codes from hono
+    return c.json(res.error);
+  }
+
+  return c.json(res.success);
+});
+
+app.post("/upload", requireAuth, async (c) => {
   const formData = await c.req.formData();
   const file = formData.get("file");
 

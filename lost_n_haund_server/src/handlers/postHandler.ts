@@ -47,6 +47,7 @@ class ItemPostHandler {
 
     try {
       const rawData = {
+        owner_id: c.get("owner_id"),
         item_name: formData.get("item_name") as string,
         item_category: (formData.getAll("item_category") as string[]) ?? [],
         description: formData.get("description") as string,

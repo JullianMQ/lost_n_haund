@@ -1,6 +1,7 @@
 import z from "zod"
 
 export const zodClaimSchema = z.object({
+  owner_id: z.string(),
   first_name: z.string().min(2),
   last_name: z.string().min(2),
   user_email: z.email(),

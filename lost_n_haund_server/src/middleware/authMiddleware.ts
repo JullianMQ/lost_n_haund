@@ -1,5 +1,7 @@
 import { createMiddleware } from "hono/factory";
 import { auth } from "../utils/auth.js";
+import db from "../db.js";
+import { ObjectId } from "mongodb";
 
 const requireAuth = createMiddleware<{
   Variables: {
@@ -37,21 +39,84 @@ const requireAdmin = createMiddleware<{
 
 const addOwnerId = createMiddleware(async (c, next) => {
   const user = c.get("user");
-  console.log("user", user)
+  if (!user) {
+    return c.json({ message: "Unauthorized" }, 401);
+  }
 
-  const owner_id = user.id;
-  console.log("owner_id", owner_id)
+  const owner_id = user?.id;
+  c.set("owner_id", owner_id);
+  return next();
+});
+
+const canUpdatePost = createMiddleware(async (c, next) => {
+  const post_id = c.req.param("id");
+  const resource = await db.collection("posts").findOne({ _id: new ObjectId(post_id) });
+
+  if (!resource) {
+    return c.json({ message: "Post not found" }, 404);
+  }
+
+  const owner_id = resource.owner_id;
+
+  if (owner_id === c.get("owner_id")) {
+    return next();
+  }
+
+  return c.json({ message: "Forbidden" }, 403);
+});
+
+const canDeletePost = createMiddleware(async (c, next) => {
+  const user = c.get("user");
+  if (user.role === "admin" || user.role === "moderator") {
+    return next();
+  }
+
+  const post_id = c.req.param("id");
+  const resource = await db.collection("posts").findOne({ _id: new ObjectId(post_id) });
+  if (!resource) {
+    return c.json({ message: "Post not found" }, 404);
+  }
+
+  const owner_id = resource.owner_id;
+  if (owner_id === c.get("owner_id")) {
+    return next();
+  }
+
+  return c.json({ message: "Forbidden" }, 403);
+});
+
+const availableClaims = createMiddleware(async (c, next) => {
+  const user = c.get("user");
+  if (user.role === "admin" || user.role === "moderator") {
+    return next();
+  }
+
+  const claims = await db.collection("claims").find({ owner_id: c.get("owner_id") }).toArray();
+  if (claims.length === 0) {
+    return c.json({ message: "No claims available" }, 404);
+  }
 
   return next();
 });
 
-// TODO:
-const canModifyPost = createMiddleware(async (c, next) => {
-  // user(if they own)/admin can update or delete their post
-});
+const canAccessClaim = createMiddleware(async (c, next) => {
+  const user = c.get("user");
+  const claim_id = c.req.param("id");
+  const resource = await db.collection("claims").findOne({ _id: new ObjectId(claim_id) });
+  if (!resource) {
+    return c.json({ message: "Claim not found" }, 404);
+  }
 
-const canModifyClaim = createMiddleware(async (c, next) => {
-  // user(if they own)/admin can CRUD their claim
-});
+  if (user.role === "admin" || user.role === "moderator") {
+    return next();
+  }
 
-export { requireAuth, requireAdmin, addOwnerId };
+  const owner_id = resource.owner_id;
+  if (owner_id === c.get("owner_id")) {
+    return next();
+  }
+
+  return c.json({ message: "Forbidden" }, 403);
+})
+
+export { requireAuth, requireAdmin, addOwnerId, canUpdatePost, canDeletePost, availableClaims, canAccessClaim };

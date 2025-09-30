@@ -46,6 +46,7 @@ class ClaimsHandler {
 
     try {
       const rawData = {
+        owner_id: formData.get("owner_id") as string,
         first_name: formData.get("first_name") as string,
         last_name: formData.get("last_name") as string,
         user_email: formData.get("user_email") as string,
