@@ -57,7 +57,6 @@ class ClaimsHandler {
 
       const res = zodClaimSchema.safeParse(rawData, {
         error: (iss) => {
-          console.log("iss", iss)
           if (iss.code === "too_small") {
             return "justification too short, should be at least 30 characters"
           } else if (iss.code === "too_big") {
@@ -184,7 +183,6 @@ class ClaimsHandler {
       const claim_id = new ObjectId(c.req.param("id")) // to not throw an error here
       const res = await this.claimsDB.findOne({ _id: claim_id })
       if (!res) {
-        console.log(res)
         return {
           status: 404,
           error: NewError("No claim with this id")

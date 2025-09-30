@@ -25,7 +25,6 @@ app.get("/users/auth/verified", async (c) => {
 app.use("/claims/*", requireAuth);
 app.use("/posts/*", requireAuth);
 app.use("/user/*", requireAdmin);
-app.use("/users/auth/delete-user", requireAuth);
 
 app.on(["POST", "GET"], "/users/auth/*", (c) => {
   return auth.handler(c.req.raw);
@@ -46,30 +45,6 @@ app.get("/user", async (c) => {
     return c.json({ error: "Internal server error" });
   }
 });
-
-// app.put("/custom/users/:id", async (c) => {
-//   const res = await u.updateUser(c);
-//   c.status(res.status);
-//
-//   if (res.status >= 400 && res.status <= 511) {
-//     // supported error codes from hono
-//     return c.json(res.error);
-//   }
-//
-//   return c.json(res.success);
-// });
-//
-// app.delete("/custom/users/:id", async (c) => {
-//   const res = await u.deleteUser(c);
-//   c.status(res.status);
-//
-//   if (res.status >= 400 && res.status <= 511) {
-//     // supported error codes from hono
-//     return c.json(res.error);
-//   }
-//
-//   return c.json(res.success);
-// });
 
 app.get("/posts", async (c) => {
   try {

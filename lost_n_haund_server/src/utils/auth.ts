@@ -4,7 +4,12 @@ import db from "./../db.js";
 import { Resend } from "resend";
 import path from "path";
 import fs from "fs";
-import { admin, createAuthMiddleware, openAPI } from "better-auth/plugins";
+import {
+  admin as adminPlugin,
+  createAuthMiddleware,
+  openAPI,
+} from "better-auth/plugins";
+import { ac, admin, moderator, student } from "./permissions.js";
 
 process.loadEnvFile();
 const resend = new Resend(process.env.TEST_API_TOKEN);
@@ -42,19 +47,24 @@ const auth = betterAuth({
         type: "string",
         required: true,
         input: true,
-      },
-      user_role: {
-        type: "string",
-        required: true,
-        defaultValue: "Student",
-        input: false,
+        unique: true,
       },
     },
   },
-  // TODO: CREATE HOOK FOR UPDATING AND DELETING USER
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
-      if (ctx.path.match("/sign-up/email")) {
+      if (ctx.path.startsWith("/sign-up/email")) {
+        const user_id = ctx.body.user_id;
+        const not_unique = await db
+          .collection("authUser")
+          .findOne({ user_id: user_id });
+
+        if (not_unique) {
+          throw new APIError("CONFLICT", {
+            message: "User with id already exists",
+          });
+        }
+
         await resend.contacts.create({
           audienceId: audienceId,
           email: ctx.body.email,
@@ -64,61 +74,70 @@ const auth = betterAuth({
         });
       }
 
-      if (ctx.path.match("/delete-user")) {
+      if (ctx.path.match("/delete-user") || ctx.path.match("/remove-user")) {
         const email = ctx.body.email;
         if (!email) {
           throw new APIError("BAD_REQUEST", {
-            message: "No email provided"
-          })
+            message: "No email provided",
+          });
         }
 
         try {
-          const res = await resend.contacts.remove({ // why tf don't this work
+          const res = await resend.contacts.remove({
             email: email,
             audienceId: audienceId,
           });
 
-          console.log(res);
-
           if (res.error !== null) {
-            console.log(res);
             throw new APIError("SERVICE_UNAVAILABLE", {
-              message: "Resend Service unavailable"
-            })
+              message: "Resend Service unavailable",
+            });
           }
         } catch (e) {
-          console.log(e);
+          console.error(e);
           throw new APIError("SERVICE_UNAVAILABLE", {
-            message: "Resend Service unavailable"
-          })
+            message: "Resend Service unavailable",
+          });
         }
       }
     }),
+
     after: createAuthMiddleware(async (ctx) => {
       if (ctx.path.match("/update-user")) {
-        const email = ctx.context.session?.user.email;
+        const email = ctx.context.session?.user.email ?? ctx.body.email;
+        const name = ctx.body.name;
+        const role: string = ctx.body.data.role;
+        const roles = ["admin", "student", "moderator"];
+
+        if (!roles.includes(role)) {
+          throw new APIError("BAD_REQUEST", {
+            message: "Role can only be admin, student, or moderator",
+          });
+        }
+
         if (!email) {
           throw new APIError("NOT_FOUND", {
-            message: "User not found"
-          })
+            message: "User not found",
+          });
         }
 
-        try {
-          await resend.contacts.update({
-            email: email,
-            audienceId: audienceId,
-            firstName: ctx.body.name.split(" ")[0],
-            lastName: ctx.body.name.split(" ")[1],
-          });
-        } catch (e) {
-          console.log(e);
-          throw new APIError("SERVICE_UNAVAILABLE", {
-            message: "Resend Service unavailable"
-          })
+        if (name) {
+          try {
+            await resend.contacts.update({
+              email: email,
+              audienceId: audienceId,
+              firstName: ctx.body.name.split(" ")[0],
+              lastName: ctx.body.name.split(" ")[1],
+            });
+          } catch (e) {
+            console.error(e);
+            throw new APIError("SERVICE_UNAVAILABLE", {
+              message: "Resend Service unavailable",
+            });
+          }
         }
       }
-
-    })
+    }),
   },
   emailVerification: {
     sendOnSignUp: true,
@@ -144,7 +163,19 @@ const auth = betterAuth({
       });
     },
   },
-  plugins: [openAPI(), admin()],
+  plugins: [
+    openAPI(),
+    adminPlugin({
+      ac,
+      roles: {
+        student,
+        moderator,
+        admin,
+      },
+      defaultRole: "student",
+      defaultBanReason: "Inappropriate posting",
+    }),
+  ],
 });
 
 export { auth, resend };
