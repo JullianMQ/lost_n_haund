@@ -14,6 +14,7 @@ export const student = ac.newRole({
 
 export const moderator = ac.newRole({
   project: ["create", "delete-post", "ban", "list-users"],
+  user: ["ban", "list", "get"]
 })
 
 export const admin = ac.newRole({
