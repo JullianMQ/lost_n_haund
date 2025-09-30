@@ -5,7 +5,7 @@ import ItemPostHandler from "./handlers/postHandler.js";
 import ClaimsHandler from "./handlers/claimsHandler.js";
 import { Top } from "./pages/verified.js";
 import { auth } from "./utils/auth.js";
-import { requireAdmin, requireAuth } from "./middleware/authMiddleware.js";
+import { addOwnerId, requireAdmin, requireAuth } from "./middleware/authMiddleware.js";
 
 export const app = new Hono<{
   Variables: {
@@ -22,8 +22,12 @@ app.get("/users/auth/verified", async (c) => {
   return c.html(<Top message={message} />);
 });
 
+// TODO: CREATE MIDDLEWARE FOR ADMINS, MODERATORS, STUDENTS
+// ==> ADMINS - able to do anything
+// ==> MODERATORS - accept and deny claims, delete posts
+// ==> STUDENTS - create, update, delete their specific posts/claims/accounts
 app.use("/claims/*", requireAuth);
-app.use("/posts/*", requireAuth);
+app.use("/posts/*", requireAuth, addOwnerId);
 app.use("/user/*", requireAdmin);
 
 app.on(["POST", "GET"], "/users/auth/*", (c) => {
