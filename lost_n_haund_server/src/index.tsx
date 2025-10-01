@@ -5,13 +5,21 @@ import ItemPostHandler from "./handlers/postHandler.js";
 import ClaimsHandler from "./handlers/claimsHandler.js";
 import { Top } from "./pages/verified.js";
 import { auth } from "./utils/auth.js";
-import { addOwnerId, availableClaims, canAccessClaim, canDeletePost, canUpdatePost, requireAdmin, requireAuth } from "./middleware/authMiddleware.js";
+import {
+  addOwnerId,
+  availableClaims,
+  canAccessClaim,
+  canDeletePost,
+  canUpdatePost,
+  requireAdmin,
+  requireAuth,
+} from "./middleware/authMiddleware.js";
 
 export const app = new Hono<{
   Variables: {
     user: typeof auth.$Infer.Session.user | null;
     session: typeof auth.$Infer.Session.session | null;
-  }
+  };
 }>();
 const u = new UserHandler();
 const p = new ItemPostHandler();
@@ -116,6 +124,26 @@ app.post("/claims", canAccessClaim, async (c) => {
 app.put("/claims/:id", canAccessClaim, async (c) => {
   const res = await cl.updateClaimPost(c);
   c.status(res.status);
+  if (res.status >= 400 && res.status <= 511) {
+    // supported error codes from hono
+    return c.json(res.error);
+  }
+
+  return c.json(res.success);
+});
+
+app.post("/claims/accept/:id", canAccessClaim, async (c) => {
+  const res = await cl.approvalHandling(c);
+  if (res.status >= 400 && res.status <= 511) {
+    // supported error codes from hono
+    return c.json(res.error);
+  }
+
+  return c.json(res.success);
+});
+
+app.post("/claims/deny/:id", canAccessClaim, async (c) => {
+  const res = await cl.approvalHandling(c);
   if (res.status >= 400 && res.status <= 511) {
     // supported error codes from hono
     return c.json(res.error);

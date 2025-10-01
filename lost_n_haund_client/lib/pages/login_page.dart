@@ -42,9 +42,6 @@ class _LoginPageState extends State<LoginPage> {
         final name = user["name"]?.toString().toLowerCase() ?? "";
         final userEmail = user["email"]?.toString().toLowerCase() ?? "";
 
-        print("Login success. Token: $token");
-        print("User: $user");
-
         if (name.contains("admin") || userEmail.contains("admin")) {
           Navigator.pushReplacement(
             context,
