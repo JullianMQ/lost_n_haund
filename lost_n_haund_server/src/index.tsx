@@ -132,7 +132,7 @@ app.put("/claims/:id", canAccessClaim, async (c) => {
   return c.json(res.success);
 });
 
-app.post("/claims/accept/:id", canAccessClaim, async (c) => {
+app.post("/claims/accept/:id", canAccessClaim, requireAdmin, async (c) => {
   const res = await cl.approvalHandling(c);
   if (res.status >= 400 && res.status <= 511) {
     // supported error codes from hono
@@ -142,7 +142,7 @@ app.post("/claims/accept/:id", canAccessClaim, async (c) => {
   return c.json(res.success);
 });
 
-app.post("/claims/deny/:id", canAccessClaim, async (c) => {
+app.post("/claims/deny/:id", canAccessClaim, requireAdmin, async (c) => {
   const res = await cl.approvalHandling(c);
   if (res.status >= 400 && res.status <= 511) {
     // supported error codes from hono
