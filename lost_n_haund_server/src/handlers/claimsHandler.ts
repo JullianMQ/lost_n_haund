@@ -1,9 +1,15 @@
 import type { Context } from "hono";
 import db from "../db.js";
-import { NewError, NewSuccess, type HandlerResult } from "../utils/success.js";
+import {
+  NewError,
+  NewSuccess,
+  type HandlerResult,
+  type CustomError,
+} from "../utils/success.js";
 import { zodClaimSchema } from "../utils/claimsTypes.js";
 import { regexOrAll } from "../utils/regexUtil.js";
 import { ObjectId } from "mongodb";
+import isIDValid from "../utils/isIdValid.js";
 
 class ClaimsHandler {
   private claimsDB = db.collection("claims");
@@ -111,7 +117,13 @@ class ClaimsHandler {
 
   async updateClaimPost(c: Context): Promise<HandlerResult> {
     const formData = await c.req.formData();
-    const claim_id = c.req.param("id");
+    const claim_id = isIDValid(c);
+    if (!claim_id) {
+      return {
+        status: 400,
+        error: "Error inputted id is incorrect, should be 24 characters",
+      };
+    }
 
     try {
       const rawData = {
@@ -183,15 +195,14 @@ class ClaimsHandler {
 
   async approvalHandling(c: Context): Promise<HandlerResult> {
     try {
-      if (!ObjectId.isValid(c.req.param("id"))) {
-        // validate first if id is of correct type
+      const claim_id = isIDValid(c);
+      if (!claim_id) {
         return {
           status: 400,
           error: "Error inputted id is incorrect, should be 24 characters",
         };
       }
 
-      const claim_id = new ObjectId(c.req.param("id")); // to not throw an error here
       const getPath = c.req.path;
       let approval: boolean;
       if (getPath.match("accept")) {
@@ -208,11 +219,11 @@ class ClaimsHandler {
         };
       }
 
-      const resDelete = await this.claimsDB.updateOne(
+      const resUpdate = await this.claimsDB.updateOne(
         { _id: claim_id },
         { $set: { approval: approval } },
       );
-      if (!resDelete.acknowledged) {
+      if (!resUpdate.acknowledged) {
         return {
           status: 503,
           error: NewError("MongoDB Error"),
@@ -232,15 +243,14 @@ class ClaimsHandler {
 
   async deleteClaimPost(c: Context): Promise<HandlerResult> {
     try {
-      if (!ObjectId.isValid(c.req.param("id"))) {
-        // validate first if id is of correct type
+      const claim_id = isIDValid(c);
+      if (!claim_id) {
         return {
           status: 400,
           error: "Error inputted id is incorrect, should be 24 characters",
         };
       }
 
-      const claim_id = new ObjectId(c.req.param("id")); // to not throw an error here
       const res = await this.claimsDB.findOne({ _id: claim_id });
       if (!res) {
         return {
@@ -256,6 +266,7 @@ class ClaimsHandler {
           error: NewError("MongoDB Error"),
         };
       }
+
       return {
         status: 200,
         success: NewSuccess("Successfully delete claim post"),
