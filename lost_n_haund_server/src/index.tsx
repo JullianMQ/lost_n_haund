@@ -110,7 +110,7 @@ app.get("/claims", availableClaims, async (c) => {
   }
 });
 
-app.post("/claims", canAccessClaim, async (c) => {
+app.post("/claims", async (c) => {
   const res = await cl.createClaimItemPost(c);
   c.status(res.status);
   if (res.status >= 400 && res.status <= 511) {

@@ -6,7 +6,7 @@ import {
   type HandlerResult,
   type CustomError,
 } from "../utils/success.js";
-import { zodClaimSchema } from "../utils/claimsTypes.js";
+import { zodClaimSchema, zodPostClaimSchema } from "../utils/claimsTypes.js";
 import { regexOrAll } from "../utils/regexUtil.js";
 import { ObjectId } from "mongodb";
 import isIDValid from "../utils/isIdValid.js";
@@ -55,17 +55,18 @@ class ClaimsHandler {
 
     try {
       const rawData = {
-        owner_id: formData.get("owner_id") as string,
+        owner_id: c.get("owner_id"),
         first_name: formData.get("first_name") as string,
         last_name: formData.get("last_name") as string,
         user_email: formData.get("user_email") as string,
         phone_num: formData.get("phone_num") as string,
         user_id: formData.get("user_id") as string,
+        image_url: formData.get("image_url") as string,
         reference_id: formData.get("reference_id") as string,
         justification: formData.get("justification") as string,
       };
 
-      const res = zodClaimSchema.safeParse(rawData, {
+      const res = zodPostClaimSchema.safeParse(rawData, {
         error: (iss) => {
           if (iss.code === "too_small") {
             return "justification too short, should be at least 30 characters";
@@ -84,6 +85,7 @@ class ClaimsHandler {
       });
 
       if (!res.success) {
+        console.error(res.error)
         console.error(
           `Error ${res.error.issues.map((issue) => issue.message).join(", ")}`,
         );
@@ -136,7 +138,7 @@ class ClaimsHandler {
         justification: formData.get("justification") as string,
       };
 
-      const res = zodClaimSchema.safeParse(rawData, {
+      const res = zodClaimSchema.partial().safeParse(rawData, {
         error: (iss) => {
           if (iss.code === "too_small") {
             return "justification too short, should be at least 30 characters";
