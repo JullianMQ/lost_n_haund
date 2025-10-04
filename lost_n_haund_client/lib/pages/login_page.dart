@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lost_n_haund_client/services/post_service.dart';
-import 'package:lost_n_haund_client/pages/admin_lost_claim.dart';
+import 'package:lost_n_haund_client/pages/admin_page.dart';
 import 'package:lost_n_haund_client/pages/home_page.dart';
+import 'package:lost_n_haund_client/pages/register_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -31,6 +34,7 @@ class _LoginPageState extends State<LoginPage> {
       final res = await _postService.loginUser(
         email: email,
         password: password,
+        context: context,
       );
 
       if (res.statusCode == 200) {
@@ -39,10 +43,16 @@ class _LoginPageState extends State<LoginPage> {
         final token = data["token"];
         final user = data["user"] as Map<String, dynamic>? ?? {};
 
+        if (token != null) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString("auth_token", token);
+          _postService.setAuthToken(token);
+        }
+
         final name = user["name"]?.toString().toLowerCase() ?? "";
         final userEmail = user["email"]?.toString().toLowerCase() ?? "";
 
-        if (name.contains("admin") || userEmail.contains("admin")) {
+        if (name.contains("admin") || userEmail.contains("admin") || name.contains("moderator") || userEmail.contains("moderator")) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => AdminPage()),
@@ -70,10 +80,7 @@ class _LoginPageState extends State<LoginPage> {
         _isLoading = false;
       });
     }
-}
-
-
-
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -170,6 +177,35 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Don\'t have an account?',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          const SizedBox(width: 4),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => RegisterPage(),
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              'Register here',
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
                     ],
                   ),
                 ),

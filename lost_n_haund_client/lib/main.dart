@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:lost_n_haund_client/pages/login_page.dart';
 import 'package:lost_n_haund_client/components/filter_post.dart';
 import 'package:lost_n_haund_client/components/filter_claim.dart';
-import 'package:provider/provider.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();  
+  WidgetsFlutterBinding.ensureInitialized();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => PostFilterProvider()),
         ChangeNotifierProvider(create: (_) => ClaimFilterProvider()),
       ],
-      
       child: const MyApp(),
     ),
   );
@@ -25,11 +27,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      navigatorKey: navigatorKey, 
       theme: ThemeData(
         primarySwatch: Colors.red,
       ),
-      home: LoginPage(),
+      home: const LoginPage(),
     );
   }
 }
-

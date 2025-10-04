@@ -75,20 +75,6 @@ class ClaimCard extends StatelessWidget {
                     style: const TextStyle(fontSize: 14),
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.location_on, size: 16, color: Colors.red.shade700),
-                      const SizedBox(width: 4),
-                      Text(location),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Icon(Icons.calendar_today, size: 16, color: Colors.blue.shade700),
-                      const SizedBox(width: 4),
-                      Text(dateClaimed.isNotEmpty ? dateClaimed : "N/A"),
-                    ],
-                  ),
                 ],
               ),
             ),

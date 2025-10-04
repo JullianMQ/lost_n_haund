@@ -28,7 +28,7 @@ class ClaimFilterProvider with ChangeNotifier {
       final res = await _postService.getFilteredClaims(
         categories: _selectedCategory.isNotEmpty ? [_selectedCategory] : null,
         location: _selectedLocation.isNotEmpty ? _selectedLocation : null,
-        search: _searchQuery.isNotEmpty ? _searchQuery : null,
+        name: _searchQuery.isNotEmpty ? _searchQuery : null,
       );
 
       if (res.statusCode == 200) {

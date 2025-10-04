@@ -50,6 +50,7 @@ class RegisterPageState extends State<RegisterPage> {
         studentId: studentId,
         contact: contact,
         password: password,
+        context: context,
       );
 
       if (!mounted) return;
@@ -120,7 +121,6 @@ class RegisterPageState extends State<RegisterPage> {
 
                     const SizedBox(height: 20),
 
-                    // First Name
                     MyTextfield(
                       controller: firstNameController,
                       hintText: 'First Name',
@@ -130,7 +130,6 @@ class RegisterPageState extends State<RegisterPage> {
 
                     const SizedBox(height: 10),
 
-                    // Last Name
                     MyTextfield(
                       controller: lastNameController,
                       hintText: 'Last Name',
@@ -140,7 +139,6 @@ class RegisterPageState extends State<RegisterPage> {
 
                     const SizedBox(height: 10),
 
-                    // Email
                     MyTextfield(
                       controller: emailController,
                       hintText: 'Hau Email',
@@ -150,7 +148,6 @@ class RegisterPageState extends State<RegisterPage> {
 
                     const SizedBox(height: 10),
 
-                    // Contact
                     MyTextfield(
                       controller: contactController,
                       hintText: 'Contact No. (Optional)',
@@ -160,7 +157,6 @@ class RegisterPageState extends State<RegisterPage> {
 
                     const SizedBox(height: 10),
 
-                    // Student/Employee ID
                     MyTextfield(
                       controller: studentIdController,
                       hintText: 'Student/Employee ID',
@@ -170,7 +166,6 @@ class RegisterPageState extends State<RegisterPage> {
 
                     const SizedBox(height: 10),
 
-                    // Password
                     MyTextfield(
                       controller: passwordController,
                       hintText: 'Password',
@@ -180,7 +175,6 @@ class RegisterPageState extends State<RegisterPage> {
 
                     const SizedBox(height: 10),
 
-                    // Confirm Password
                     MyTextfield(
                       controller: confirmPasswordController,
                       hintText: 'Confirm Password',

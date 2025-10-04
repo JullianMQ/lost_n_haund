@@ -50,7 +50,6 @@ class ItemInfoPage extends StatelessWidget {
                     thickness: 2,
                   ),
 
-                  // Reference ID
                   Center(
                     child: Text(
                       "Reference ID: ${itemData['_id']}",
@@ -63,7 +62,6 @@ class ItemInfoPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // Image
                   Center(
                     child: Container(
                       width: 200,
@@ -82,7 +80,7 @@ class ItemInfoPage extends StatelessWidget {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16),
                         child: Image.asset(
-                          "images/bg-hau.jpg", // Later we can make this dynamic
+                          "images/bg-hau.jpg", 
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -96,7 +94,6 @@ class ItemInfoPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
 
-                  // Show item details dynamically
                   Text(
                     "Item Name: ${itemData['item_name']}\n"
                     "Item Category: ${itemData['item_category']}\n"

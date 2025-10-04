@@ -36,7 +36,6 @@ class ItemCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Item Image
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.network(

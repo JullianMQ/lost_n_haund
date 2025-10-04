@@ -30,10 +30,9 @@ class _FormPageState extends State<FormPage> {
   final locationFoundController = TextEditingController();
 
   File? _selectedImage;
-  final ImagePicker _picker = ImagePicker();
 
-  // Form Type Selector
-  String _formType = "claim"; // Default: Claim Form
+  final PostService postService = PostService();
+  String _formType = "claim"; 
 
   void resetForm() {
     formKey.currentState?.reset();
@@ -57,12 +56,10 @@ class _FormPageState extends State<FormPage> {
   }
 
   Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() => _selectedImage = File(picked.path));
+    
 
       showDialog(
         context: context,
@@ -475,7 +472,6 @@ class _FormPageState extends State<FormPage> {
                     _formType == "claim" ? _buildClaimForm() : _buildLostForm(),
                     const SizedBox(height: 20),
 
-                    // Submit Button
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -501,6 +497,7 @@ class _FormPageState extends State<FormPage> {
                                     widget.referenceId ?? "ref-${DateTime.now().millisecondsSinceEpoch}", 
                                 justification: claimController.text,
                                 imageFile: _selectedImage,
+                                context: context,
                               );
 
                               if (res.statusCode == 200 ||
@@ -524,32 +521,39 @@ class _FormPageState extends State<FormPage> {
                                 SnackBar(content: Text("${res.data}")), 
                               );
                             } else {
-                              final res = await api.createLostItem(
-                                itemName: itemNameController.text,
-                                itemCategory: [itemCategoryController.text], 
-                                description: descriptionController.text,
-                                dateFound: dateFoundController.text,
-                                locationFound: locationFoundController.text,
-                                imageFile: _selectedImage,
+                              final res = await postService.createLostItem(
+                                context: context,
+                                itemName: itemNameController.text.trim(),
+                                itemCategories: [itemCategoryController.text.trim()],
+                                description: descriptionController.text.trim(),
+                                dateFound: dateFoundController.text.trim(),
+                                locationFound: locationFoundController.text.trim(),
+                                imageFile: _selectedImage!, 
                               );
 
+                              
+
                               if (res.statusCode == 200 || res.statusCode == 201) {
-                                showDialog(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: const Text("Success"),
-                                    content: const Text("Lost item report has been submitted successfully!"),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(ctx).pop();
-                                          resetForm();
-                                        },
-                                        child: const Text("OK"),
+                                if (context.mounted) {
+                                  showDialog(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: const Text("Success"),
+                                      content: const Text(
+                                        "Lost item report has been submitted successfully!",
                                       ),
-                                    ],
-                                  ),
-                                );
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(ctx).pop();
+                                            resetForm();
+                                          },
+                                          child: const Text("OK"),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
                               } else {
                                 showDialog(
                                   context: context,

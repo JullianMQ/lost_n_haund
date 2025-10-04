@@ -1,19 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:lost_n_haund_client/components/my_textfield.dart';
 import 'package:lost_n_haund_client/components/header.dart';
 
-class ContactUsPage extends StatelessWidget {
-  final formKey = GlobalKey<FormState>();
-
-  // text controllers
-  final firstNameController = TextEditingController();
-  final lastNameController = TextEditingController();
-  final emailController = TextEditingController();
-  final contactController = TextEditingController();
-  final messageController = TextEditingController();
-  final studentController = TextEditingController();
-
-  ContactUsPage({super.key});
+class ContactPage extends StatelessWidget {
+  const ContactPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -37,169 +26,42 @@ class ContactUsPage extends StatelessWidget {
                 color: const Color(0xFF800000), 
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      "Contact Us",
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start, 
+                children: [
+                  Center(
+                    child: Text(
+                      "Contact Page",
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.white,
                         fontSize: 30,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 15),
+                  ),
+                  const SizedBox(height: 10), 
+                  Text(
+                    "Campus Service\n campusservice@hau.edu.ph\nlocal 1177\n\n"
+                    "Trunklines:\n (63) 045-625-5748\n (63) 045-625-9620\n (63) 045-625-9619\n\n"
+                    "Fax Numbers:\n"
+                    "888-2514 - President's Office\n"
 
-                    // First Name
-                    Row(
-                      children: [
-                        Text(
-                          "First Name:",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    MyTextfield(
-                      controller: firstNameController,
-                      hintText: 'First Name',
-                      obscureText: false,
-                      maxLines: 1,
-                    ),
-                    const SizedBox(height: 15),
+                    "International Calls:\n"
+                    "Please dial (+63-45) plus telephone number."
+                    "National Calls:\n"
+                    "Please dial (045) plus telephone number."
 
-                    // Last Name
-                    Row(
-                      children: [
-                        Text(
-                          "Last Name:",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
+                    "\n\nMobile:\n 09190873327 (Smart)\n 09190873328 (Smart)\n 09190873329 (Smart)\n 09176320339 (Globe)\n",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      
                     ),
-                    MyTextfield(
-                      controller: lastNameController,
-                      hintText: 'Last Name',
-                      obscureText: false,
-                      maxLines: 1,
-                    ),
-                    const SizedBox(height: 15),
-
-                    // Email
-                    Row(
-                      children: [
-                        Text(
-                          "Email",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    MyTextfield(
-                      controller: emailController,
-                      hintText: 'Email:',
-                      obscureText: false,
-                      maxLines: 1,
-                    ),
-                    const SizedBox(height: 15),
-
-                    // Contact No.
-                    Row(
-                      children: [
-                        Text(
-                          "Contact No.",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    MyTextfield(
-                      controller: contactController,
-                      hintText: 'Contact No.',
-                      obscureText: false,
-                      maxLines: 1,
-                    ),
-                    const SizedBox(height: 15),
-
-                    // Student No.
-                    Row(
-                      children: [
-                        Text(
-                          "Student No.",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    MyTextfield(
-                      controller: studentController,
-                      hintText: 'Student No.',
-                      obscureText: false,
-                      maxLines: 1,
-                    ),
-                    const SizedBox(height: 15),
-
-                    // Message
-                    Row(
-                      children: [
-                        Text(
-                          "Message:",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    MyTextfield(
-                      controller: messageController,
-                      hintText: 'Message',
-                      maxLines: 5,
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Submit Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: const Color(0xFF800000),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                        onPressed: () {
-                          if (formKey.currentState!.validate()) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Form Submitted!")),
-                            );
-                          }
-                        },
-                        child: const Text("Submit"),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

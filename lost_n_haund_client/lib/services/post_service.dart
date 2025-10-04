@@ -4,25 +4,25 @@ import 'dart:io';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/material.dart';
 
 class PostService {
-  late Dio _dio;
+  Dio? _dio;
   PersistCookieJar? _cookieJar;
+  final _storage = const FlutterSecureStorage();
 
-  PostService() {
-    _initCookieJar();
-  }
+  Future<Dio> _getDio() async {
+    if (_dio != null) return _dio!;
 
-  Future<void> _initCookieJar() async {
-    final appDocDir = await getApplicationDocumentsDirectory();
-    final cookiePath = Directory('${appDocDir.path}/.cookies');
+    final appDir = await getApplicationDocumentsDirectory();
+    final cookieDir = Directory('${appDir.path}/.cookies');
 
-    if (!await cookiePath.exists()) {
-      await cookiePath.create(recursive: true);
+    if (!await cookieDir.exists()) {
+      await cookieDir.create(recursive: true);
     }
 
-    _cookieJar = PersistCookieJar(storage: FileStorage(cookiePath.path));
-
+    _cookieJar = PersistCookieJar(storage: FileStorage(cookieDir.path));
     _dio = Dio(
       BaseOptions(
         baseUrl: ApiConfig.androidEmulatorUrl,
@@ -30,54 +30,95 @@ class PostService {
         receiveTimeout: const Duration(seconds: 10),
       ),
     );
-
     _dio!.interceptors.add(CookieManager(_cookieJar!));
+
+    final token = await _storage.read(key: "auth_token");
+    if (token != null) {
+      _dio!.options.headers["Authorization"] = "Bearer $token";
+    }
+
+    return _dio!;
   }
 
-  Future<Dio> _getDio() async {
-    if (_dio == null) {
-      await _initCookieJar();
+  Future<void> setAuthToken(String token) async {
+    await _storage.write(key: "auth_token", value: token);
+    final dio = await _getDio();
+    dio.options.headers["Authorization"] = "Bearer $token";
+  }
+
+  Future<void> clearToken() async {
+    await _storage.delete(key: "auth_token");
+    if (_dio != null) {
+      _dio!.options.headers.remove("Authorization");
     }
-    return _dio!;
+  }
+
+  Future<void> _handleInvalidGrant(BuildContext context) async {
+    await clearToken();
+    if (context.mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    }
+  }
+
+  Future<Response> _handleRequest(
+    BuildContext context,
+    Future<Response> Function(Dio dio) request,
+  ) async {
+    try {
+      final dio = await _getDio();
+      final response = await request(dio);
+
+      if (response.statusCode == 401 &&
+          response.data is Map &&
+          response.data['error'] == 'invalid_grant') {
+        await _handleInvalidGrant(context);
+      }
+
+      return response;
+    } on DioException catch (e) {
+      debugPrint("DioException: ${e.message}");
+
+      if (e.response?.statusCode == 401 &&
+          e.response?.data is Map &&
+          e.response?.data['error'] == 'invalid_grant') {
+        await _handleInvalidGrant(context);
+      }
+
+      return Response(
+        requestOptions: e.requestOptions,
+        statusCode: e.response?.statusCode ?? 500,
+        statusMessage: e.response?.statusMessage ?? 'Request failed',
+        data: e.response?.data ?? {'error': e.message},
+      );
+    } catch (e, stackTrace) {
+      debugPrint("Unexpected error in _handleRequest: $e\n$stackTrace");
+      return Response(
+        requestOptions: RequestOptions(path: ''),
+        statusCode: 500,
+        data: {'error': e.toString()},
+      );
+    }
   }
 
   Future<Response> loginUser({
     required String email,
     required String password,
+    required BuildContext context,
   }) async {
-    final dio = await _getDio();
-    try {
-      final formData = FormData.fromMap({
-        "email": email,
-        "password": password,
-      });
-
-      final res = await dio.post(
-        "/users/auth/sign-in/email",
-        data: formData,
-        options: Options(
-          headers: {"Content-Type": "multipart/form-data"},
-        ),
-      );
+    return _handleRequest(context, (dio) async {
+      final formData = FormData.fromMap({"email": email, "password": password});
+      final res = await dio.post("/users/auth/sign-in/email", data: formData);
+      if (res.statusCode == 200 && res.data["token"] != null) {
+        await setAuthToken(res.data["token"]);
+      }
       return res;
-    } on DioException catch (e) {
-      return e.response ??
-          Response(
-            requestOptions: e.requestOptions,
-            statusCode: 500,
-            statusMessage: "Login failed: ${e.message}",
-          );
-    }
+    });
   }
 
-  Future<void> logoutUser() async {
-    final dio = await _getDio();
-    try {
-      await dio.post("/users/auth/logout");
-    } catch (_) {}
-    if (_cookieJar != null) {
-      await _cookieJar!.deleteAll();
-    }
+  Future<void> logoutUser(BuildContext context) async {
+    await _handleRequest(context, (dio) async => dio.post("/users/auth/logout"));
+    await _cookieJar?.deleteAll();
+    await clearToken();
   }
 
   Future<Response> registerUser({
@@ -87,9 +128,9 @@ class PostService {
     required String contact,
     required String studentId,
     required String password,
+    required BuildContext context,
   }) async {
-    final dio = await _getDio();
-    try {
+    return _handleRequest(context, (dio) async {
       final formData = FormData.fromMap({
         "name": "$firstName $lastName",
         "email": email,
@@ -97,19 +138,11 @@ class PostService {
         "user_id": studentId,
         "password": password,
       });
-
-      final response = await dio.post("/users/auth/sign-up/email", data: formData);
-      return response;
-    } on DioException catch (e) {
-      return e.response ??
-          Response(
-            requestOptions: e.requestOptions,
-            statusCode: 500,
-            statusMessage: "Sign-up failed: ${e.message}",
-          );
-    }
+      return dio.post("/users/auth/sign-up/email", data: formData);
+    });
   }
 
+  // ✅ Fixed version: uses _getDio() safely
   Future<Response> createClaim({
     required String firstName,
     required String lastName,
@@ -118,61 +151,49 @@ class PostService {
     required String studentId,
     required String referenceId,
     required String justification,
+    required BuildContext context,
     File? imageFile,
+    String? ownerId,
   }) async {
-    final dio = await _getDio();
     try {
-      String? uploadedUrl;
-
-      if (imageFile != null) {
-        final uploadForm = FormData.fromMap({
-          "file": await MultipartFile.fromFile(
-            imageFile.path,
-            filename: imageFile.path.split("/").last,
-          ),
-        });
-        final uploadRes = await dio.post("/upload", data: uploadForm);
-        if (uploadRes.statusCode == 200 && uploadRes.data["success"] != null) {
-          uploadedUrl = uploadRes.data["success"]["urlImage"];
-        }
-      }
+      final dio = await _getDio();
 
       final formData = FormData.fromMap({
+        "owner_id": ownerId ?? "guest",
         "first_name": firstName,
         "last_name": lastName,
-        "email": email,
+        "user_email": email,
         "phone_num": contact,
         "user_id": studentId,
         "reference_id": referenceId,
         "justification": justification,
-        if (uploadedUrl != null) "image_url": uploadedUrl,
+        if (imageFile != null)
+          "file": await MultipartFile.fromFile(
+            imageFile.path,
+            filename: imageFile.path.split('/').last,
+          ),
       });
 
-      final res = await dio.post("/claims", data: formData);
-      return res;
-    } on DioException catch (e) {
-      return e.response ??
-          Response(
-            requestOptions: e.requestOptions,
-            statusCode: 500,
-            statusMessage: "Claim creation failed: ${e.message}",
-          );
+      final response = await dio.post("/claims", data: formData);
+      return response;
+    } catch (e) {
+      debugPrint('Error creating claim: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error creating claim: $e')),
+        );
+      }
+      return Response(
+        requestOptions: RequestOptions(path: '/claims'),
+        statusCode: 500,
+        data: {'error': e.toString()},
+      );
     }
   }
 
   Future<Response> getClaims() async {
     final dio = await _getDio();
-    try {
-      final response = await dio.get("/claims");
-      return response;
-    } on DioException catch (e) {
-      return e.response ??
-          Response(
-            requestOptions: e.requestOptions,
-            statusCode: 500,
-            statusMessage: "Fetching claims failed: ${e.message}",
-          );
-    }
+    return dio.get("/claims");
   }
 
   Future<Response> getFilteredClaims({
@@ -182,82 +203,93 @@ class PostService {
     String? status,
     List<String>? categories,
     int? page,
-    String? search,
   }) async {
     final dio = await _getDio();
-    final Map<String, dynamic> queryParams = {};
+    final Map<String, dynamic> qp = {};
 
-    if (name != null && name.isNotEmpty) queryParams['name'] = name;
-    if (description != null && description.isNotEmpty) queryParams['description'] = description;
-    if (location != null && location.isNotEmpty) queryParams['location'] = location;
-    if (status != null && status.isNotEmpty) queryParams['status'] = status;
-    if (categories != null && categories.isNotEmpty) queryParams['categories'] = categories;
-    if (page != null) queryParams['page'] = page.toString();
-    if (search != null && search.isNotEmpty) queryParams['search'] = search;
+    if (name?.isNotEmpty ?? false) qp['name'] = name;
+    if (description?.isNotEmpty ?? false) qp['description'] = description;
+    if (location?.isNotEmpty ?? false) qp['location'] = location;
+    if (status?.isNotEmpty ?? false) qp['status'] = status;
+    if (categories?.isNotEmpty ?? false) qp['categories'] = categories;
+    if (page != null) qp['page'] = page.toString();
 
-    return await dio.get("/claims", queryParameters: queryParams);
+    return dio.get("/claims", queryParameters: qp);
   }
 
   Future<Response> createLostItem({
+    required BuildContext context,
     required String itemName,
-    required List<String> itemCategory,
+    required List<String> itemCategories,
     required String description,
     required String dateFound,
     required String locationFound,
-    File? imageFile,
+    required File imageFile,
   }) async {
-    final dio = await _getDio();
+    
     try {
-      String? uploadedUrl;
+      final dio = await _getDio();
 
-      if (imageFile != null) {
-        final uploadForm = FormData.fromMap({
-          "file": await MultipartFile.fromFile(
-            imageFile.path,
-            filename: imageFile.path.split("/").last,
-          ),
-        });
-        final uploadRes = await dio.post("/upload", data: uploadForm);
-        if (uploadRes.statusCode == 200) {
-          uploadedUrl = uploadRes.data["success"]["urlImage"];
-        }
+      final uploadResponse = await dio.post(
+        '/upload',
+        data: FormData.fromMap({
+          'file': await MultipartFile.fromFile(imageFile.path),
+        }),
+      );
+
+      if (uploadResponse.statusCode != 200) {
+        throw Exception("Image upload failed");
       }
 
-      final formData = FormData.fromMap({
-        "item_name": itemName,
-        "item_category": itemCategory,
-        "description": description,
-        "date_found": dateFound,
-        "location_found": locationFound,
-        "status": "pending",
-        if (uploadedUrl != null) "image_url": uploadedUrl,
-      });
+      final imageUrl = uploadResponse.data['success']?['urlImage']?.toString() ?? '';
+      final formData = FormData();
 
-      final res = await dio.post("/posts", data: formData);
+      print(imageUrl);
+
+      formData.fields
+      ..add(MapEntry('item_name', itemName))
+      ..add(MapEntry('description', description))
+      ..add(MapEntry('date_found', dateFound))
+      ..add(MapEntry('location_found', locationFound))
+      ..add(MapEntry('image_url', imageUrl)); 
+
+    
+      for (final category in itemCategories) {
+        formData.fields.add(MapEntry('item_category', category));
+      }
+
+      final res = await dio.post(
+        '/posts',
+        data: {
+          'item_name': itemName,
+          'item_category': itemCategories,
+          'description': description,
+          'date_found': dateFound,
+          'location_found': locationFound,
+          'image_url': imageUrl,
+        },
+      );
+
+      
       return res;
-    } on DioException catch (e) {
-      return e.response ??
-          Response(
-            requestOptions: e.requestOptions,
-            statusCode: 500,
-            statusMessage: "Lost item creation failed: ${e.message}",
-          );
+    } catch (e) {
+      debugPrint('Unexpected error: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unexpected error: $e')),
+        );
+      }
+      return Response(
+        requestOptions: RequestOptions(path: '/posts'),
+        statusCode: 500,
+        data: {'error': e.toString()},
+      );
     }
   }
 
   Future<Response> getPosts() async {
     final dio = await _getDio();
-    try {
-      final response = await dio.get("/posts");
-      return response;
-    } on DioException catch (e) {
-      return e.response ??
-          Response(
-            requestOptions: e.requestOptions,
-            statusCode: 500,
-            statusMessage: "Fetching posts failed: ${e.message}",
-          );
-    }
+    return dio.get("/posts");
   }
 
   Future<Response> getFilteredPosts({
@@ -267,17 +299,17 @@ class PostService {
     String? status,
     List<String>? categories,
     int? page,
-    String? search,
   }) async {
     final dio = await _getDio();
-    final Map<String, dynamic> queryParams = {};
+    final Map<String, dynamic> qp = {};
 
-    if (name != null && name.isNotEmpty) queryParams['name'] = name;
-    if (location != null && location.isNotEmpty) queryParams['location'] = location;
-    if (categories != null && categories.isNotEmpty) queryParams['categories'] = categories;
-    if (page != null) queryParams['page'] = page.toString();
-    if (search != null && search.isNotEmpty) queryParams['search'] = search;
+    if (name?.isNotEmpty ?? false) qp['name'] = name;
+    if (description?.isNotEmpty ?? false) qp['description'] = description;
+    if (location?.isNotEmpty ?? false) qp['location'] = location;
+    if (status?.isNotEmpty ?? false) qp['status'] = status;
+    if (categories?.isNotEmpty ?? false) qp['categories'] = categories;
+    if (page != null) qp['page'] = page.toString();
 
-    return await dio.get("/posts", queryParameters: queryParams);
+    return dio.get("/posts", queryParameters: qp);
   }
 }
