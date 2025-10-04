@@ -4,13 +4,12 @@ import 'dart:io';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 
 class PostService {
   Dio? _dio;
   PersistCookieJar? _cookieJar;
-  final _storage = const FlutterSecureStorage();
 
   Future<Dio> _getDio() async {
     if (_dio != null) return _dio!;
@@ -32,7 +31,8 @@ class PostService {
     );
     _dio!.interceptors.add(CookieManager(_cookieJar!));
 
-    final token = await _storage.read(key: "auth_token");
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("auth_token");
     if (token != null) {
       _dio!.options.headers["Authorization"] = "Bearer $token";
     }
@@ -41,13 +41,17 @@ class PostService {
   }
 
   Future<void> setAuthToken(String token) async {
-    await _storage.write(key: "auth_token", value: token);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("auth_token", token);
+
     final dio = await _getDio();
     dio.options.headers["Authorization"] = "Bearer $token";
   }
 
   Future<void> clearToken() async {
-    await _storage.delete(key: "auth_token");
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove("auth_token");
+
     if (_dio != null) {
       _dio!.options.headers.remove("Authorization");
     }
@@ -142,7 +146,6 @@ class PostService {
     });
   }
 
-  // ✅ Fixed version: uses _getDio() safely
   Future<Response> createClaim({
     required String firstName,
     required String lastName,
@@ -226,7 +229,6 @@ class PostService {
     required String locationFound,
     required File imageFile,
   }) async {
-    
     try {
       final dio = await _getDio();
 
@@ -241,36 +243,21 @@ class PostService {
         throw Exception("Image upload failed");
       }
 
-      final imageUrl = uploadResponse.data['success']?['urlImage']?.toString() ?? '';
-      final formData = FormData();
+      final imageUrl =
+          uploadResponse.data['success']?['urlImage']?.toString() ?? '';
 
-      print(imageUrl);
+    final res = await dio.post(
+    '/posts',
+    data: FormData.fromMap({
+      'item_name': itemName,
+      'item_category': itemCategories, 
+      'description': description,
+      'date_found': dateFound,
+      'location_found': locationFound,
+      'image_url': imageUrl,
+    }),
+  );
 
-      formData.fields
-      ..add(MapEntry('item_name', itemName))
-      ..add(MapEntry('description', description))
-      ..add(MapEntry('date_found', dateFound))
-      ..add(MapEntry('location_found', locationFound))
-      ..add(MapEntry('image_url', imageUrl)); 
-
-    
-      for (final category in itemCategories) {
-        formData.fields.add(MapEntry('item_category', category));
-      }
-
-      final res = await dio.post(
-        '/posts',
-        data: {
-          'item_name': itemName,
-          'item_category': itemCategories,
-          'description': description,
-          'date_found': dateFound,
-          'location_found': locationFound,
-          'image_url': imageUrl,
-        },
-      );
-
-      
       return res;
     } catch (e) {
       debugPrint('Unexpected error: $e');
