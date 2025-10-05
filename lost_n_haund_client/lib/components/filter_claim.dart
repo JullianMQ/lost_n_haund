@@ -4,18 +4,12 @@ import 'package:lost_n_haund_client/services/post_service.dart';
 class ClaimFilterProvider with ChangeNotifier {
   final PostService _postService = PostService();
 
-  String _selectedCategory = '';
-  String _selectedLocation = '';
-  String _searchQuery = '';
+  String _name = '';
+  String _userId = '';
+  String _ownerId = '';
 
   List _claims = [];
   bool _isLoading = false;
-
-  String get selectedCategory =>
-      _selectedCategory.isEmpty ? "Category" : _selectedCategory;
-  String get selectedLocation =>
-      _selectedLocation.isEmpty ? "Location" : _selectedLocation;
-  String get searchQuery => _searchQuery.isEmpty ? "Search" : _searchQuery;
 
   List get claims => _claims;
   bool get isLoading => _isLoading;
@@ -25,45 +19,56 @@ class ClaimFilterProvider with ChangeNotifier {
     notifyListeners();
 
     try {
+      String? firstName;
+      String? lastName;
+
+      if (_name.isNotEmpty) {
+        final parts = _name.trim().split(RegExp(r'\s+'));
+        firstName = parts.isNotEmpty ? parts.first : null;
+        lastName = parts.length > 1 ? parts.sublist(1).join(' ') : null;
+      }
+
       final res = await _postService.getFilteredClaims(
-        categories: _selectedCategory.isNotEmpty ? [_selectedCategory] : null,
-        location: _selectedLocation.isNotEmpty ? _selectedLocation : null,
-        name: _searchQuery.isNotEmpty ? _searchQuery : null,
+        firstName: firstName?.isNotEmpty == true ? firstName : null,
+        lastName: lastName?.isNotEmpty == true ? lastName : null,
+        userId: _userId.isNotEmpty ? _userId : null,
+        ownerId: _ownerId.isNotEmpty ? _ownerId : null,
       );
 
-      if (res.statusCode == 200) {
-        _claims = res.data;
+      if (res.statusCode == 200 && res.data != null) {
+        _claims = res.data is List ? res.data : [];
       } else {
         _claims = [];
       }
     } catch (e) {
       _claims = [];
+      debugPrint('Error fetching claims: $e');
     }
 
     _isLoading = false;
     notifyListeners();
   }
 
-  void setCategory(String category) {
-    _selectedCategory = category;
+  void setName(String value) {
+    _name = value;
     fetchClaims();
   }
 
-  void setLocation(String location) {
-    _selectedLocation = location;
+  void setUserId(String value) {
+    _userId = value;
     fetchClaims();
   }
 
-  void setSearchQuery(String query) {
-    _searchQuery = query;
+  void setOwnerId(String value) {
+    _ownerId = value;
     fetchClaims();
   }
 
   void sortByDate() {
     _claims.sort((a, b) {
-      DateTime dateA =
+      final dateA =
           DateTime.tryParse(a['date_found'] ?? '') ?? DateTime(1970);
-      DateTime dateB =
+      final dateB =
           DateTime.tryParse(b['date_found'] ?? '') ?? DateTime(1970);
       return dateB.compareTo(dateA);
     });
@@ -71,9 +76,9 @@ class ClaimFilterProvider with ChangeNotifier {
   }
 
   void clearFilters() {
-    _selectedCategory = '';
-    _selectedLocation = '';
-    _searchQuery = '';
+    _name = '';
+    _userId = '';
+    _ownerId = '';
     fetchClaims();
   }
 }

@@ -155,11 +155,25 @@ class PostService {
     required String referenceId,
     required String justification,
     required BuildContext context,
-    File? imageFile,
+    required File imageFile,
     String? ownerId,
   }) async {
     try {
       final dio = await _getDio();
+
+      final uploadResponse = await dio.post(
+        '/upload',
+        data: FormData.fromMap({
+          'file': await MultipartFile.fromFile(imageFile.path),
+        }),
+      );
+
+      if (uploadResponse.statusCode != 200) {
+        throw Exception("Image upload failed");
+      }
+
+      final imageUrl =
+          uploadResponse.data['success']?['urlImage']?.toString() ?? '';
 
       final formData = FormData.fromMap({
         "owner_id": ownerId ?? "guest",
@@ -168,13 +182,9 @@ class PostService {
         "user_email": email,
         "phone_num": contact,
         "user_id": studentId,
+        "image_url": imageUrl, 
         "reference_id": referenceId,
         "justification": justification,
-        if (imageFile != null)
-          "file": await MultipartFile.fromFile(
-            imageFile.path,
-            filename: imageFile.path.split('/').last,
-          ),
       });
 
       final response = await dio.post("/claims", data: formData);
@@ -201,23 +211,35 @@ class PostService {
 
   Future<Response> getFilteredClaims({
     String? name,
-    String? description,
-    String? location,
-    String? status,
-    List<String>? categories,
-    int? page,
-  }) async {
-    final dio = await _getDio();
-    final Map<String, dynamic> qp = {};
+    String? firstName,
+    String? lastName,
+    String? userId,
+    String? ownerId,
+    }) async {
+      final dio = await _getDio();
 
-    if (name?.isNotEmpty ?? false) qp['name'] = name;
-    if (description?.isNotEmpty ?? false) qp['description'] = description;
-    if (location?.isNotEmpty ?? false) qp['location'] = location;
-    if (status?.isNotEmpty ?? false) qp['status'] = status;
-    if (categories?.isNotEmpty ?? false) qp['categories'] = categories;
-    if (page != null) qp['page'] = page.toString();
+      String? fName = firstName?.trim();
+      String? lName = lastName?.trim();
 
-    return dio.get("/claims", queryParameters: qp);
+      if ((fName?.isEmpty ?? true) && (lName?.isEmpty ?? true) && (name?.trim().isNotEmpty ?? false)) {
+        final parts = name!.trim().split(RegExp(r'\s+'));
+
+        if (parts.length == 1) {
+          fName = null;
+          lName = parts.first;
+        } else {
+          fName = parts.first;
+          lName = parts.sublist(1).join(' ');
+        }
+      }
+      
+      final Map<String, dynamic> qp = {};
+      if (fName?.isNotEmpty ?? false) qp['first_name'] = fName;
+      if (lName?.isNotEmpty ?? false) qp['last_name'] = lName;
+      if (userId?.isNotEmpty ?? false) qp['user_id'] = userId;
+      if (ownerId?.isNotEmpty ?? false) qp['owner_id'] = ownerId;
+
+      return dio.get('/claims', queryParameters: qp);
   }
 
   Future<Response> createLostItem({

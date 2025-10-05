@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 
 class AdminPage extends StatefulWidget {
   final formKey = GlobalKey<FormState>();
-  final nameController = TextEditingController();
 
   AdminPage({super.key});
 
@@ -16,27 +15,29 @@ class AdminPage extends StatefulWidget {
   State<AdminPage> createState() => _AdminPageState();
 }
 
-  class _AdminPageState extends State<AdminPage> {
-    final nameController = TextEditingController();
+class _AdminPageState extends State<AdminPage> {
+  final nameController = TextEditingController();
+  final userIdController = TextEditingController();
+  final ownerIdController = TextEditingController();
 
-    @override
-    void initState() {
-      super.initState();
-      Future.microtask(() {
-        Provider.of<ClaimFilterProvider>(context, listen: false).fetchClaims();
-      });
-    }
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      Provider.of<ClaimFilterProvider>(context, listen: false).fetchClaims();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final filterProvider = Provider.of<ClaimFilterProvider>(context, listen: false);
+    final filterProvider = Provider.of<ClaimFilterProvider>(context);
 
     return Scaffold(
       appBar: const PreferredSize(
         preferredSize: Size.fromHeight(75),
         child: Header(),
       ),
-      endDrawer: CustomDrawer(  isAdmin: true,),
+      endDrawer: const CustomDrawer(isAdmin: true),
       body: Column(
         children: [
           const SizedBox(height: 10),
@@ -47,7 +48,7 @@ class AdminPage extends StatefulWidget {
                 'images/bg-hau.jpg',
                 fit: BoxFit.cover,
                 width: double.infinity,
-                height: 250,
+                height: 300, 
               ),
               Container(
                 width: double.infinity,
@@ -58,7 +59,7 @@ class AdminPage extends StatefulWidget {
                   borderRadius: BorderRadius.circular(15),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black,
+                      color: Colors.black.withOpacity(0.5),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -75,64 +76,36 @@ class AdminPage extends StatefulWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
+
+                  MyTextfield(
+                    controller: nameController,
+                    hintText: 'Claimant Name',
+                    obscureText: false,
+                    maxLines: 1,
+                    onChanged: (val) {
+                      context.read<ClaimFilterProvider>().setName(val);
+                    },
+                  ),
+                    const SizedBox(height: 10),
+
                     MyTextfield(
-                      controller: nameController,
-                      hintText: 'Name',
+                      controller: userIdController,
+                      hintText: 'User ID',
                       obscureText: false,
                       maxLines: 1,
                       onChanged: (val) {
-                        context.read<ClaimFilterProvider>().setSearchQuery(val);
+                        context.read<ClaimFilterProvider>().setUserId(val);
                       },
                     ),
                     const SizedBox(height: 15),
 
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         FilterButton(
-                          text: "Date",
+                          text: "Sort by Date",
                           onPressed: () {
                             filterProvider.sortByDate();
-                          },
-                        ),
-
-                        Consumer<ClaimFilterProvider>(
-                          builder: (context, provider, _) {
-                            return PopupMenuButton<String>(
-                              onSelected: (value) {
-                                provider.setCategory(value == "All" ? "" : value);
-                              },
-                              itemBuilder: (context) => const [
-                                PopupMenuItem(value: "All", child: Text("All")),
-                                PopupMenuItem(value: "Bag", child: Text("Bag")),
-                                PopupMenuItem(value: "Device", child: Text("Device")),
-                                PopupMenuItem(value: "Umbrella", child: Text("Umbrella")),
-                                PopupMenuItem(value: "Tumbler", child: Text("Tumbler")),
-                                PopupMenuItem(value: "Document", child: Text("Document")),
-                              ],
-                              child: FilterButton(text: provider.selectedCategory),
-                            );
-                          },
-                        ),
-
-                        Consumer<ClaimFilterProvider>(
-                          builder: (context, provider, _) {
-                            return PopupMenuButton<String>(
-                              onSelected: (value) {
-                                provider.setLocation(value == "All" ? "" : value);
-                              },
-                              itemBuilder: (context) => const [
-                                PopupMenuItem(value: "All", child: Text("All")),
-                                PopupMenuItem(value: "Library", child: Text("Library")),
-                                PopupMenuItem(value: "GGN", child: Text("GGN")),
-                                PopupMenuItem(value: "PGN", child: Text("PGN")),
-                                PopupMenuItem(value: "SJH", child: Text("SJH")),
-                                PopupMenuItem(value: "APS", child: Text("APS")),
-                                PopupMenuItem(value: "MGN", child: Text("MGN")),
-                                PopupMenuItem(value: "STL", child: Text("STL")),
-                              ],
-                              child: FilterButton(text: provider.selectedLocation),
-                            );
                           },
                         ),
                       ],
@@ -143,6 +116,7 @@ class AdminPage extends StatefulWidget {
             ],
           ),
 
+          // Claims Header
           Container(
             color: const Color(0xFF7B001E),
             width: double.infinity,
@@ -160,6 +134,7 @@ class AdminPage extends StatefulWidget {
           ),
           const SizedBox(height: 10),
 
+          // Claims List
           Expanded(
             child: Consumer<ClaimFilterProvider>(
               builder: (context, provider, child) {
@@ -174,6 +149,7 @@ class AdminPage extends StatefulWidget {
                     child: Text("No claims found"),
                   );
                 }
+
                 return ListView.builder(
                   itemCount: provider.claims.length,
                   itemBuilder: (context, index) {
@@ -188,7 +164,7 @@ class AdminPage extends StatefulWidget {
                       dateClaimed: claim['date_found'] ?? claim['createdAt'] ?? "",
                       location: claim['location'] ?? "Unknown",
                       status: claim['status'] ?? "pending",
-                      claimId: claim['_id'],
+                      claimId: claim['_id'] ?? 'N/A',
                       claimData: claim,
                     );
                   },

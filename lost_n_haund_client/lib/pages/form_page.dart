@@ -59,21 +59,6 @@ class _FormPageState extends State<FormPage> {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
       setState(() => _selectedImage = File(picked.path));
-    
-
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text("Photo Uploaded"),
-          content: const Text("Your photo has been successfully uploaded."),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text("OK"),
-            ),
-          ],
-        ),
-      );
     }
   }
 
@@ -496,7 +481,7 @@ class _FormPageState extends State<FormPage> {
                                 referenceId:
                                     widget.referenceId ?? "ref-${DateTime.now().millisecondsSinceEpoch}", 
                                 justification: claimController.text,
-                                imageFile: _selectedImage,
+                                imageFile: _selectedImage!,
                                 context: context,
                               );
 

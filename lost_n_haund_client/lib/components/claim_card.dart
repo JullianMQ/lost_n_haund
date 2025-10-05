@@ -1,105 +1,118 @@
 import 'package:flutter/material.dart';
+import 'package:lost_n_haund_client/pages/admin_item_info.dart';
 
 class ClaimCard extends StatelessWidget {
-  final String imagePath;
-  final String claimantName;
-  final String referenceId;
-  final String justification;
-  final String dateClaimed;
-  final String location;
-  final String status;
-  final String claimId;
-  final Map<String, dynamic> claimData;
+  final String? imagePath;
+  final String? claimantName;
+  final String? referenceId;
+  final String? justification;
+  final String? dateClaimed;
+  final String? location;
+  final String? status;
+  final String? claimId;
+  final Map<String, dynamic>? claimData;
 
   const ClaimCard({
     super.key,
-    required this.imagePath,
-    required this.claimantName,
-    required this.referenceId,
-    required this.justification,
-    required this.dateClaimed,
-    required this.location,
-    required this.status,
-    required this.claimId,
-    required this.claimData,
+    this.imagePath,
+    this.claimantName,
+    this.referenceId,
+    this.justification,
+    this.dateClaimed,
+    this.location,
+    this.status,
+    this.claimId,
+    this.claimData,
   });
 
   @override
   Widget build(BuildContext context) {
+    final safeImage = (imagePath != null && imagePath!.isNotEmpty)
+        ? imagePath!
+        : "images/bg-hau.jpg";
+    final safeClaimData = claimData ?? {};
+
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 4,
+      color: const Color(0xFF7B001E),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Padding(
         padding: const EdgeInsets.all(12),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: imagePath.isNotEmpty
+              child: safeImage.startsWith("http")
                   ? Image.network(
-                      imagePath,
-                      width: 100,
-                      height: 100,
+                      safeImage,
+                      width: double.infinity,
+                      height: 150,
                       fit: BoxFit.cover,
+                      loadingBuilder: (context, child, progress) {
+                        if (progress == null) return child;
+                        return Container(
+                          height: 150,
+                          color: Colors.grey[300],
+                          child: const Center(
+                            child: CircularProgressIndicator(color: Colors.white),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Image.asset(
+                          "images/bg-hau.jpg",
+                          width: double.infinity,
+                          height: 150,
+                          fit: BoxFit.cover,
+                        );
+                      },
                     )
                   : Image.asset(
-                      "images/bg-hau.jpg",
-                      width: 100,
-                      height: 100,
+                      safeImage,
+                      width: double.infinity,
+                      height: 150,
                       fit: BoxFit.cover,
                     ),
             ),
-            const SizedBox(width: 12),
 
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    claimantName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    "Ref: $referenceId",
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    justification,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                  const SizedBox(height: 8),
-                ],
-              ),
-            ),
+            const SizedBox(height: 10),
 
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: status == "approved"
-                    ? Colors.green.shade100
-                    : status == "rejected"
-                        ? Colors.red.shade100
-                        : Colors.orange.shade100,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                status.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: status == "approved"
-                      ? Colors.green.shade800
-                      : status == "rejected"
-                          ? Colors.red.shade800
-                          : Colors.orange.shade800,
+            Text(claimantName ?? "Unknown Claimant",
+                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            Text("Reference ID: ${referenceId ?? '-'}", style: const TextStyle(color: Colors.white)),
+            Text("Claim ID: ${claimId ?? '-'}", style: const TextStyle(color: Colors.white)),
+            Text("Justification: ${justification ?? '-'}", style: const TextStyle(color: Colors.white)),
+            Text("Status: ${status ?? '-'}", style: const TextStyle(color: Colors.white)),
+
+            const SizedBox(height: 12),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (safeClaimData.isNotEmpty) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AdminItemInfo(itemData: safeClaimData),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('No claim data available')),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF7B001E),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: const BorderSide(color: Colors.white, width: 2),
+                  ),
                 ),
+                child: const Text("More Info"),
               ),
             ),
           ],

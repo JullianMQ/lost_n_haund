@@ -3,16 +3,17 @@ import 'package:lost_n_haund_client/components/header.dart';
 import 'package:lost_n_haund_client/components/action_button.dart';
 
 class AdminItemInfo extends StatelessWidget {
-  const AdminItemInfo({super.key});
+  const AdminItemInfo({super.key, required this.itemData});
+  final Map<String, dynamic> itemData;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Admin Item Info"),
-        backgroundColor: const Color(0xFF800020),
+      appBar: const PreferredSize(
+        preferredSize: Size.fromHeight(75),
+        child: Header(),
       ),
-      drawer: Header(), 
+      endDrawer: CustomDrawer(isAdmin: true),
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
@@ -110,18 +111,18 @@ class AdminItemInfo extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 15),
-                  ActionButtons(
-                    onEdit: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Edit button clicked!")),
-                      );
-                    },
-                    onDelete: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Delete button clicked!")),
-                      );
-                    },
-                  ),
+                  // ActionButtons(
+                  //   onEdit: () {
+                  //     ScaffoldMessenger.of(context).showSnackBar(
+                  //       const SnackBar(content: Text("Edit button clicked!")),
+                  //     );
+                  //   },
+                  //   onDelete: () {
+                  //     ScaffoldMessenger.of(context).showSnackBar(
+                  //       const SnackBar(content: Text("Delete button clicked!")),
+                  //     );
+                  //   },
+                  // ),
                 ],
               ),
             ),
