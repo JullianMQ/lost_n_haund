@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lost_n_haund_client/pages/admin_item_info.dart';
 
+
 class ClaimCard extends StatelessWidget {
   final String? imagePath;
   final String? claimantName;
@@ -91,30 +92,23 @@ class ClaimCard extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  if (safeClaimData.isNotEmpty) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AdminItemInfo(itemData: safeClaimData),
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('No claim data available')),
-                    );
-                  }
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AdminItemInfo(itemData: claimData!),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: const Color(0xFF7B001E),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    side: const BorderSide(color: Colors.white, width: 2),
-                  ),
+                  backgroundColor: const Color(0xFF7B001E),
+                  foregroundColor: Colors.white,
+
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: const BorderSide(color: Colors.white, width: 2)),
                 ),
                 child: const Text("More Info"),
               ),
             ),
+            
           ],
         ),
       ),

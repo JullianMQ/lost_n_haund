@@ -321,4 +321,27 @@ class PostService {
 
     return dio.get("/posts", queryParameters: qp);
   }
+
+    Future<Map<String, dynamic>> acceptClaim(String claimId) async {
+    try {
+      final dio = await _getDio(); 
+      final response = await dio.post('/claims/accept/$claimId');
+      return {'message': response.data['message'] ?? 'Claim accepted'};
+    } catch (e) {
+      debugPrint("Error in acceptClaim: $e");
+      return {'error': e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> denyClaim(String claimId) async {
+    try {
+      final dio = await _getDio(); 
+      final response = await dio.post('/claims/deny/$claimId');
+      return {'message': response.data['message'] ?? 'Claim denied'};
+    } catch (e) {
+      debugPrint("Error in acceptClaim: $e");
+      return {'error': e.toString()};
+    }
+  }
+
 }
