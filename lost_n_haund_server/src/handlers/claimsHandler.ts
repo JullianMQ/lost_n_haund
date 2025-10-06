@@ -21,6 +21,8 @@ class ClaimsHandler {
     const phone_num = c.req.query("phone_num") || "";
     const user_id = c.req.query("user_id") || "";
     const reference_id = c.req.query("reference_id") || "";
+    const user = c.get("user");
+    const role = user.role;
     const page =
       c.req.query("page") === undefined ? 0 : parseInt(c.req.query("page")!);
 
@@ -33,6 +35,9 @@ class ClaimsHandler {
           { phone_num: regexOrAll(phone_num) },
           { user_id: regexOrAll(user_id) },
           { reference_id: regexOrAll(reference_id) },
+          {
+            owner_id: role === "student" ? c.get("owner_id") : { $not: / / },
+          },
         ],
       };
 
@@ -85,7 +90,7 @@ class ClaimsHandler {
       });
 
       if (!res.success) {
-        console.error(res.error)
+        console.error(res.error);
         console.error(
           `Error ${res.error.issues.map((issue) => issue.message).join(", ")}`,
         );
