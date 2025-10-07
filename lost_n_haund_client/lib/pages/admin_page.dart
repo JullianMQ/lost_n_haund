@@ -16,7 +16,8 @@ class AdminPage extends StatefulWidget {
 }
 
 class _AdminPageState extends State<AdminPage> {
-  final nameController = TextEditingController();
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
   final userIdController = TextEditingController();
   final ownerIdController = TextEditingController();
 
@@ -78,12 +79,22 @@ class _AdminPageState extends State<AdminPage> {
                     const SizedBox(height: 10),
 
                   MyTextfield(
-                    controller: nameController,
-                    hintText: 'Claimant Name',
+                    controller: firstNameController,
+                    hintText: 'First Name',
                     obscureText: false,
                     maxLines: 1,
                     onChanged: (val) {
-                      context.read<ClaimFilterProvider>().setName(val);
+                      context.read<ClaimFilterProvider>().setFirstName(val);
+                    },
+                  ),
+                    const SizedBox(height: 10),
+                  MyTextfield(
+                    controller: lastNameController,
+                    hintText: 'Last Name',
+                    obscureText: false,
+                    maxLines: 1,
+                    onChanged: (val) {
+                      context.read<ClaimFilterProvider>().setLastName(val);
                     },
                   ),
                     const SizedBox(height: 10),

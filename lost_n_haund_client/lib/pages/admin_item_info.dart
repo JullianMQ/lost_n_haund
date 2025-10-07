@@ -113,7 +113,7 @@ class AdminItemInfo extends StatelessWidget {
 
                     _buildInfoRow(
                       "Claimant Name",
-                      "${itemData['first_name'] ?? 'N/A'} ${itemData['last_name'] ?? ''}",
+                      "${itemData['first_name'] ?? ''} ${itemData['last_name'] ?? ''}",
                     ),
                     _buildInfoRow("User Email", itemData['user_email'] ?? 'N/A'),
                     _buildInfoRow("Phone Number", itemData['phone_num'] ?? 'N/A'),
@@ -151,7 +151,7 @@ class AdminItemInfo extends StatelessWidget {
                                   content: Text(
                                     isApproved
                                         ? 'Claim denied'
-                                        : 'Claim accepted successfully!',
+                                        : 'Claim approved successfully!',
                                   ),
                                   backgroundColor: isApproved ? Colors.redAccent : Colors.green,
                                 ),

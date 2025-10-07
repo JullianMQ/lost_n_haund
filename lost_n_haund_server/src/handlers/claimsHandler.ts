@@ -4,7 +4,6 @@ import {
   NewError,
   NewSuccess,
   type HandlerResult,
-  type CustomError,
 } from "../utils/success.js";
 import { zodClaimSchema, zodPostClaimSchema } from "../utils/claimsTypes.js";
 import { regexOrAll } from "../utils/regexUtil.js";

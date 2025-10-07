@@ -4,7 +4,8 @@ import 'package:lost_n_haund_client/services/post_service.dart';
 class ClaimFilterProvider with ChangeNotifier {
   final PostService _postService = PostService();
 
-  String _name = '';
+  String _firstName = '';
+  String _lastName = '';
   String _userId = '';
   String _ownerId = '';
 
@@ -19,18 +20,9 @@ class ClaimFilterProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      String? firstName;
-      String? lastName;
-
-      if (_name.isNotEmpty) {
-        final parts = _name.trim().split(RegExp(r'\s+'));
-        firstName = parts.isNotEmpty ? parts.first : null;
-        lastName = parts.length > 1 ? parts.sublist(1).join(' ') : null;
-      }
-
       final res = await _postService.getFilteredClaims(
-        firstName: firstName?.isNotEmpty == true ? firstName : null,
-        lastName: lastName?.isNotEmpty == true ? lastName : null,
+        firstName: _firstName.isNotEmpty == true ? _firstName : null,
+        lastName: _lastName.isNotEmpty == true ? _lastName : null,
         userId: _userId.isNotEmpty ? _userId : null,
         ownerId: _ownerId.isNotEmpty ? _ownerId : null,
       );
@@ -49,8 +41,13 @@ class ClaimFilterProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void setName(String value) {
-    _name = value;
+  void setFirstName(String value) {
+    _firstName = value;
+    fetchClaims();
+  }
+
+  void setLastName(String value) {
+    _lastName = value;
     fetchClaims();
   }
 
@@ -76,7 +73,8 @@ class ClaimFilterProvider with ChangeNotifier {
   }
 
   void clearFilters() {
-    _name = '';
+    _firstName = '';
+    _lastName = '';
     _userId = '';
     _ownerId = '';
     fetchClaims();
