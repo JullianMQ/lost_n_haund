@@ -21,6 +21,8 @@ class _AdminPageState extends State<AdminPage> {
   final userIdController = TextEditingController();
   final ownerIdController = TextEditingController();
 
+  bool showApproved = false; 
+
   @override
   void initState() {
     super.initState();
@@ -49,12 +51,14 @@ class _AdminPageState extends State<AdminPage> {
                 'images/bg-hau.jpg',
                 fit: BoxFit.cover,
                 width: double.infinity,
-                height: 300, 
+                height: 300,
               ),
               Container(
                 width: double.infinity,
-                margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 25),
-                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+                margin:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 25),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
                 decoration: BoxDecoration(
                   color: const Color(0xFF7B001E),
                   borderRadius: BorderRadius.circular(15),
@@ -78,25 +82,32 @@ class _AdminPageState extends State<AdminPage> {
                     ),
                     const SizedBox(height: 10),
 
-                  MyTextfield(
-                    controller: firstNameController,
-                    hintText: 'First Name',
-                    obscureText: false,
-                    maxLines: 1,
-                    onChanged: (val) {
-                      context.read<ClaimFilterProvider>().setFirstName(val);
-                    },
-                  ),
+                    MyTextfield(
+                      controller: firstNameController,
+                      hintText: 'First Name',
+                      obscureText: false,
+                      maxLines: 1,
+                      onChanged: (val) {
+                        context
+                            .read<ClaimFilterProvider>()
+                            .setFirstName(val);
+                      },
+                    ),
+
                     const SizedBox(height: 10),
-                  MyTextfield(
-                    controller: lastNameController,
-                    hintText: 'Last Name',
-                    obscureText: false,
-                    maxLines: 1,
-                    onChanged: (val) {
-                      context.read<ClaimFilterProvider>().setLastName(val);
-                    },
-                  ),
+
+                    MyTextfield(
+                      controller: lastNameController,
+                      hintText: 'Last Name',
+                      obscureText: false,
+                      maxLines: 1,
+                      onChanged: (val) {
+                        context
+                            .read<ClaimFilterProvider>()
+                            .setLastName(val);
+                      },
+                    ),
+
                     const SizedBox(height: 10),
 
                     MyTextfield(
@@ -108,6 +119,7 @@ class _AdminPageState extends State<AdminPage> {
                         context.read<ClaimFilterProvider>().setUserId(val);
                       },
                     ),
+
                     const SizedBox(height: 15),
 
                     Row(
@@ -119,6 +131,39 @@ class _AdminPageState extends State<AdminPage> {
                             filterProvider.sortByDate();
                           },
                         ),
+                        const SizedBox(width: 10),
+
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              showApproved = !showApproved;
+                            });
+                          },
+                          icon: Icon(
+                            showApproved
+                                ? Icons.list_alt
+                                : Icons.check_circle_outline,
+                            color: Colors.white,
+                          ),
+                          label: Text(
+                            showApproved
+                                ? "Show Pending"
+                                : "Show Approved",
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: showApproved
+                                ? Colors.orange
+                                : Colors.green,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 15, vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: const BorderSide(
+                                  color: Colors.white, width: 2),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -127,15 +172,14 @@ class _AdminPageState extends State<AdminPage> {
             ],
           ),
 
-          // Claims Header
           Container(
             color: const Color(0xFF7B001E),
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 10),
-            child: const Center(
+            child: Center(
               child: Text(
-                "Claims",
-                style: TextStyle(
+                showApproved ? "Approved Claims" : "Pending Claims",
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -145,7 +189,6 @@ class _AdminPageState extends State<AdminPage> {
           ),
           const SizedBox(height: 10),
 
-          // Claims List
           Expanded(
             child: Consumer<ClaimFilterProvider>(
               builder: (context, provider, child) {
@@ -155,26 +198,42 @@ class _AdminPageState extends State<AdminPage> {
                   );
                 }
 
-                if (provider.claims.isEmpty) {
-                  return const Center(
-                    child: Text("No claims found"),
+                final filteredClaims = provider.claims
+                    .where((claim) => showApproved
+                        ? claim['approval'] == true
+                        : claim['approval'] != true)
+                    .toList();
+
+                if (filteredClaims.isEmpty) {
+                  return Center(
+                    child: Text(
+                      showApproved
+                          ? "No approved claims found."
+                          : "No pending claims found.",
+                      style: const TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
                   );
                 }
 
                 return ListView.builder(
-                  itemCount: provider.claims.length,
+                  itemCount: filteredClaims.length,
                   itemBuilder: (context, index) {
-                    final claim = provider.claims[index] as Map<String, dynamic>;
+                    final claim =
+                        filteredClaims[index] as Map<String, dynamic>;
 
                     return ClaimCard(
                       imagePath: claim['image_url'] ?? "",
                       claimantName:
                           "${claim['first_name'] ?? ''} ${claim['last_name'] ?? ''}",
                       referenceId: claim['reference_id'] ?? "N/A",
-                      justification: claim['justification'] ?? "No justification",
-                      dateClaimed: claim['date_found'] ?? claim['createdAt'] ?? "",
+                      justification:
+                          claim['justification'] ?? "No justification",
+                      dateClaimed:
+                          claim['date_found'] ?? claim['createdAt'] ?? "",
                       location: claim['location'] ?? "Unknown",
-                      status: claim['status'] ?? "pending",
+                      status: claim['approval'] == true
+                          ? "Approved"
+                          : "Pending",
                       claimId: claim['_id'] ?? 'N/A',
                       claimData: claim,
                     );
