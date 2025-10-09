@@ -343,5 +343,46 @@ class PostService {
       return {'error': e.toString()};
     }
   }
+Future<List<dynamic>> getUsers({
+  String? name,
+  String? userId,
+  String? email,
+  String? password,
+  int page = 0,
+}) async {
+  try {
+    final dio = await _getDio();
+    final query = {
+      if (name != null && name.isNotEmpty) 'name': name,
+      if (userId != null && userId.isNotEmpty) 'id': userId,
+      if (email != null && email.isNotEmpty) 'email': email,
+      if (password != null && password.isNotEmpty) 'password': password,
+      'page': page,
+    };
+
+
+    print('🛰 Sending GET request to /users/auth/admin/list-users');
+    print('🔍 Query parameters: $query');
+
+    final response = await dio.get(
+      '/users/auth/admin/list-users',
+      queryParameters: query,
+    );
+
+    print('✅ Response status: ${response.statusCode}');
+    print('📦 Response data: ${response.data}');
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data['users'] ?? [];
+      return List<Map<String, dynamic>>.from(data);
+    } else {
+      throw Exception('Failed to load users');
+    }
+  } on DioException catch (e) {
+    print('❌ Error fetching users: ${e.response?.data ?? e.message}');
+    rethrow;
+  }
+}
+
 
 }

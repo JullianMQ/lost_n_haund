@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lost_n_haund_client/pages/admin_users.dart';
 import 'package:lost_n_haund_client/pages/form_page.dart';
 import 'package:lost_n_haund_client/pages/contact_page.dart';
 import 'package:lost_n_haund_client/pages/about_us_page.dart';
@@ -39,6 +40,7 @@ class CustomDrawer extends StatelessWidget {
                   children: isAdmin
                       ? [
                           buttonOption(context, "Dashboard", AdminPage()),
+                          buttonOption(context, "Users", AdminUserPage()),
                         ]
                       : [
                           buttonOption(context, "Home", HomePage()),

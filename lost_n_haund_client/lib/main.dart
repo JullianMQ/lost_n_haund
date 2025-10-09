@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:lost_n_haund_client/pages/login_page.dart';
 import 'package:lost_n_haund_client/components/filter_post.dart';
 import 'package:lost_n_haund_client/components/filter_claim.dart';
+import 'package:lost_n_haund_client/components/filter_users.dart';
+
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -14,6 +16,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => PostFilterProvider()),
         ChangeNotifierProvider(create: (_) => ClaimFilterProvider()),
+        ChangeNotifierProvider(create: (_) => UserFilterProvider()),
       ],
       child: const MyApp(),
     ),
