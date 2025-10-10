@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lost_n_haund_client/services/post_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class ClaimFilterProvider with ChangeNotifier {
   final PostService _postService = PostService();
@@ -20,12 +22,18 @@ class ClaimFilterProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final res = await _postService.getFilteredClaims(
-        firstName: _firstName.isNotEmpty == true ? _firstName : null,
-        lastName: _lastName.isNotEmpty == true ? _lastName : null,
-        userId: _userId.isNotEmpty ? _userId : null,
-        ownerId: _ownerId.isNotEmpty ? _ownerId : null,
-      );
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      print(' Token used in fetchClaims: $token');
+
+    final res = await _postService.getFilteredClaims(
+      firstName: _firstName.isNotEmpty ? _firstName : null,
+      lastName: _lastName.isNotEmpty ? _lastName : null,
+      userId: _userId.isNotEmpty ? _userId : null,
+      ownerId: _ownerId.isNotEmpty ? _ownerId : null,
+    );
+
 
       if (res.statusCode == 200 && res.data != null) {
         _claims = res.data is List ? res.data : [];
@@ -34,7 +42,7 @@ class ClaimFilterProvider with ChangeNotifier {
       }
     } catch (e) {
       _claims = [];
-      debugPrint('Error fetching claims: $e');
+      debugPrint(' Error fetching claims: $e');
     }
 
     _isLoading = false;

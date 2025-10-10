@@ -47,6 +47,9 @@ class _LoginPageState extends State<LoginPage> {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString("auth_token", token);
           _postService.setAuthToken(token);
+
+          await prefs.setString("user_email", email);
+          await prefs.setString("user_name", user["name"] ?? "");
         }
 
         final name = user["name"]?.toString().toLowerCase() ?? "";

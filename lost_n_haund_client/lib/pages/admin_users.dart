@@ -4,6 +4,7 @@ import 'package:lost_n_haund_client/components/header.dart';
 import 'package:lost_n_haund_client/components/my_textfield.dart';
 import 'package:lost_n_haund_client/components/users_card.dart';
 import 'package:lost_n_haund_client/components/filter_users.dart';
+import 'package:lost_n_haund_client/pages/user_info_page.dart';
 
 class AdminUserPage extends StatefulWidget {
   const AdminUserPage({super.key});
@@ -38,6 +39,7 @@ class _AdminUserPageState extends State<AdminUserPage> {
         preferredSize: Size.fromHeight(75),
         child: Header(),
       ),
+      endDrawer: const CustomDrawer(isAdmin: true),
       body: Column(
         children: [
           const SizedBox(height: 10),
@@ -138,26 +140,43 @@ class _AdminUserPageState extends State<AdminUserPage> {
             child: provider.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : provider.users.isEmpty
-                    ? const Center(
-                        child: Text(
-                          "No users found.",
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: provider.users.length,
-                        itemBuilder: (context, index) {
-                          final user = provider.users[index];
-                          return UserCard(
-                            name: user['name'] ?? 'No Name',
-                            userId: user['user_id'] ?? 'N/A',
-                            email: user['email'] ?? 'N/A',
-                            onEdit: () {
-                              // TODO: implement edit dialog later
-                            },
-                          );
-                        },
+                  ? const Center(
+                    child: Text(
+                      "No users found.",
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
                       ),
+                    )
+                    : ListView.builder(
+                      itemCount: provider.users.length,
+                      itemBuilder: (context, index) {
+                        final user = provider.users[index];
+                        final name = user['name'] ?? 'No Name';
+                        final id = user['user_id']?.toString() ?? 'N/A';
+                        final email = user['email'] ?? 'N/A';
+                        final password = user['password'] ?? 'N/A';
+                        
+                        return UserCard(
+                          name: name,
+                          userId: id,
+                          email: email,
+                          password: password,
+                          onEdit: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => UserInfoPage(userData: {
+                                  'name': name,
+                                  'id': id,
+                                  'email': email,
+                                  'password': password,
+                                  '_id': user['_id'] ?? '',
+                                }),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
           ),
         ],
       ),

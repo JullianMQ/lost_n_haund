@@ -38,7 +38,6 @@ class UserFilterProvider with ChangeNotifier {
     try {
       final result = await _service.getUsers(
         name: name,
-        userId: userId,
         email: email,
         password: password,
       );

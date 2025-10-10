@@ -4,6 +4,7 @@ class UserCard extends StatelessWidget {
   final String name;
   final String userId;
   final String email;
+  final String password;
   final VoidCallback? onEdit;
 
   const UserCard({
@@ -11,6 +12,7 @@ class UserCard extends StatelessWidget {
     required this.name,
     required this.userId,
     required this.email,
+    required this.password,
     this.onEdit,
   });
 
@@ -39,6 +41,11 @@ class UserCard extends StatelessWidget {
                 _infoText("User Name: $name"),
                 _infoText("User ID: $userId"),
                 _infoText("User Email: $email"),
+                _infoText(
+                  "User Password: ${password != null && password.toString().isNotEmpty 
+                      ? '•••••••• (Hidden)' 
+                      : 'Not Set'}",
+                ),
               ],
             ),
           ),

@@ -210,36 +210,49 @@ class PostService {
   }
 
   Future<Response> getFilteredClaims({
-    String? name,
-    String? firstName,
-    String? lastName,
-    String? userId,
-    String? ownerId,
-    }) async {
-      final dio = await _getDio();
+String? name,
+  String? firstName,
+  String? lastName,
+  String? userId,
+  String? ownerId,
+}) async {
+  final dio = await _getDio();
 
-      String? fName = firstName?.trim();
-      String? lName = lastName?.trim();
+  String? fName = firstName?.trim();
+  String? lName = lastName?.trim();
 
-      if ((fName?.isEmpty ?? true) && (lName?.isEmpty ?? true) && (name?.trim().isNotEmpty ?? false)) {
-        final parts = name!.trim().split(RegExp(r'\s+'));
+  if ((fName?.isEmpty ?? true) && (lName?.isEmpty ?? true) && (name?.trim().isNotEmpty ?? false)) {
+    final parts = name!.trim().split(RegExp(r'\s+'));
+    if (parts.length == 1) {
+      fName = null;
+      lName = parts.first;
+    } else {
+      fName = parts.first;
+      lName = parts.sublist(1).join(' ');
+    }
+  }
 
-        if (parts.length == 1) {
-          fName = null;
-          lName = parts.first;
-        } else {
-          fName = parts.first;
-          lName = parts.sublist(1).join(' ');
-        }
-      }
-      
-      final Map<String, dynamic> qp = {};
-      if (fName?.isNotEmpty ?? false) qp['first_name'] = fName;
-      if (lName?.isNotEmpty ?? false) qp['last_name'] = lName;
-      if (userId?.isNotEmpty ?? false) qp['user_id'] = userId;
-      if (ownerId?.isNotEmpty ?? false) qp['owner_id'] = ownerId;
+  final Map<String, dynamic> qp = {};
+  if (fName?.isNotEmpty ?? false) qp['first_name'] = fName;
+  if (lName?.isNotEmpty ?? false) qp['last_name'] = lName;
+  if (userId?.isNotEmpty ?? false) qp['user_id'] = userId;
+  if (ownerId?.isNotEmpty ?? false) qp['owner_id'] = ownerId;
 
-      return dio.get('/claims', queryParameters: qp);
+  try {
+    final response = await dio.get(
+      '/claims',
+      queryParameters: qp,
+      options: Options(
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      ),
+    );
+
+    return response;
+  } catch (e) {
+    rethrow;
+  }
   }
 
   Future<Response> createLostItem({
@@ -343,46 +356,195 @@ class PostService {
       return {'error': e.toString()};
     }
   }
-Future<List<dynamic>> getUsers({
-  String? name,
-  String? userId,
-  String? email,
-  String? password,
-  int page = 0,
+
+  Future<List<dynamic>> getUsers({
+    String? name,
+    String? userId,
+    String? email,
+    String? password,
+    int page = 0,
+  }) async {
+    try {
+      final dio = await _getDio();
+      final query = {
+        if (name != null && name.isNotEmpty) 'name': name,
+        if (userId != null && userId.isNotEmpty) 'user_id': userId, 
+        if (email != null && email.isNotEmpty) 'email': email,
+        if (password != null && password.isNotEmpty) 'password': password,
+        'page': page,
+      };
+
+      final response = await dio.get(
+        '/users/auth/admin/list-users',
+        queryParameters: query,
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final data = List<Map<String, dynamic>>.from(response.data['users'] ?? []);
+
+        for (var user in data) {
+          if (user['_id'] == null && user['id'] != null) {
+            user['_id'] = user['id']; 
+          }
+        }
+
+        print("Raw users data: $data");
+        return data;
+      } else {
+        throw Exception('Failed to load users');
+      }
+    } on DioException catch (e) {
+      print("Error fetching users: ${e.response?.data ?? e.message}");
+      rethrow;
+    }
+  }
+
+  Future<void> removeUser({
+  required String id,  
+  required String token,
+  required String email,
 }) async {
   try {
     final dio = await _getDio();
-    final query = {
-      if (name != null && name.isNotEmpty) 'name': name,
-      if (userId != null && userId.isNotEmpty) 'id': userId,
-      if (email != null && email.isNotEmpty) 'email': email,
-      if (password != null && password.isNotEmpty) 'password': password,
-      'page': page,
-    };
 
+    print('Removing user → MongoDB _id: $id');  
+    print(' | email: $email');  
 
-    print('🛰 Sending GET request to /users/auth/admin/list-users');
-    print('🔍 Query parameters: $query');
-
-    final response = await dio.get(
-      '/users/auth/admin/list-users',
-      queryParameters: query,
+    final response = await dio.post(
+      '/users/auth/admin/remove-user',
+      data: {
+        "userId": id,  
+        "email": email,  
+      },
+      options: Options(headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      }),
     );
 
-    print('✅ Response status: ${response.statusCode}');
-    print('📦 Response data: ${response.data}');
-
-    if (response.statusCode == 200 && response.data != null) {
-      final data = response.data['users'] ?? [];
-      return List<Map<String, dynamic>>.from(data);
+    if (response.statusCode == 200) {
+      print("User removed successfully: ${response.data}");
     } else {
-      throw Exception('Failed to load users');
+      throw Exception('Failed to remove user: ${response.statusCode}');
     }
   } on DioException catch (e) {
-    print('❌ Error fetching users: ${e.response?.data ?? e.message}');
+    print("Failed to remove user: ${e.response?.data ?? e.message}");
+    if (e.response != null) {
+      print("Full error response: ${e.response?.data}");
+    }
+    rethrow;
+  } catch (e) {
+    print(" Unexpected error removing user: $e");
+    rethrow;
+  }
+}
+
+  Future<Response> updateUser({
+    required String name,
+    required String image,
+    required String token,
+
+  }) async {
+    final dio = await _getDio();
+
+    try {
+      final res = await dio.post(
+        '/users/auth/update-user',
+        data: {
+          "name": name,
+          "image": image,
+        },
+        options: Options(headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        }),
+      );
+      return res;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+Future<void> banUser({
+  required String id,      
+  required String token,   
+  required String reason,  
+}) async {
+  try {
+    final dio = await _getDio();
+
+    print('Banning user → MongoDB _id: $id');
+    print(' | Reason: $reason');
+
+    final response = await dio.post(
+      '/users/auth/admin/ban-user',
+      data: {
+        "userId": id,
+        "banReason": reason,
+      },
+      options: Options(headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print("✅ User banned successfully: ${response.data}");
+    } else {
+      throw Exception(' Failed to ban user: ${response.statusCode}');
+    }
+  } on DioException catch (e) {
+    print(" Failed to ban user: ${e.response?.data ?? e.message}");
+    if (e.response != null) {
+      print("Full error response: ${e.response?.data}");
+    }
+    rethrow;
+  } catch (e) {
+    print(" Unexpected error banning user: $e");
+    rethrow;
+  }
+}
+
+Future<void> unbanUser({
+  required String id,
+  required String token,
+}) async {
+  try {
+    final dio = await _getDio();
+
+    print('Unbanning user → MongoDB _id: $id');
+
+    final response = await dio.post(
+      '/users/auth/admin/unban-user',
+      data: {
+        "userId": id,
+      },
+      options: Options(headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print(" User unbanned successfully: ${response.data}");
+    } else {
+      throw Exception(' Failed to unban user: ${response.statusCode}');
+    }
+  } on DioException catch (e) {
+    print(" Failed to unban user: ${e.response?.data ?? e.message}");
+    if (e.response != null) {
+      print("Full error response: ${e.response?.data}");
+    }
+    rethrow;
+  } catch (e) {
+    print(" Unexpected error unbanning user: $e");
     rethrow;
   }
 }
 
 
+
+
 }
+  
+
