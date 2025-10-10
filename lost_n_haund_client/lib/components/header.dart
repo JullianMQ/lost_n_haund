@@ -6,6 +6,8 @@ import 'package:lost_n_haund_client/pages/about_us_page.dart';
 import 'package:lost_n_haund_client/pages/home_page.dart';
 import 'package:lost_n_haund_client/pages/login_page.dart';
 import 'package:lost_n_haund_client/pages/admin_page.dart';
+import 'package:lost_n_haund_client/pages/claims_users.dart';
+
 
 class CustomDrawer extends StatelessWidget {
   final bool isAdmin;
@@ -46,6 +48,7 @@ class CustomDrawer extends StatelessWidget {
                           buttonOption(context, "Home", HomePage()),
                           buttonOption(context, "Form", FormPage()),
                           buttonOption(context, "About", AboutUsPage()),
+                          buttonOption(context, "Claims", UserClaimsPage()),
                           buttonOption(context, "Contact Us", ContactPage()),
                         ],
                 ),
