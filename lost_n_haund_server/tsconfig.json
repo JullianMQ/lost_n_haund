@@ -4,6 +4,7 @@
     "module": "NodeNext",
     "strict": true,
     "verbatimModuleSyntax": true,
+    "typeRoots": ["./node_modules/@types"],
     "skipLibCheck": true,
     "types": [
       "node"
