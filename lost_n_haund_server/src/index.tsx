@@ -14,6 +14,7 @@ import {
   requireAdmin,
   requireAuth,
 } from "./middleware/authMiddleware.js";
+import { cors } from "hono/cors";
 
 export const app = new Hono<{
   Variables: {
@@ -25,6 +26,7 @@ const u = new UserHandler();
 const p = new ItemPostHandler();
 const cl = new ClaimsHandler();
 
+app.use("/*", cors());
 app.get("/users/auth/verified", async (c) => {
   const message = "You may now enter the app!";
   return c.html(<Top message={message} />);
