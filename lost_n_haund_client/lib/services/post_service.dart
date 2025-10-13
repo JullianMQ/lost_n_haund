@@ -24,7 +24,7 @@ class PostService {
     _cookieJar = PersistCookieJar(storage: FileStorage(cookieDir.path));
     _dio = Dio(
       BaseOptions(
-        baseUrl: ApiConfig.androidEmulatorUrl,
+        baseUrl: ApiConfig.hostedUrl,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
       ),

@@ -50,7 +50,7 @@ class _AdminUserPageState extends State<AdminUserPage> {
                 'images/bg-hau.jpg',
                 fit: BoxFit.cover,
                 width: double.infinity,
-                height: 370,
+                height: 300,
               ),
               Container(
                 width: double.infinity,

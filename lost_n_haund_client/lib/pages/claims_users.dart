@@ -49,7 +49,7 @@ class _UserClaimsPageState extends State<UserClaimsPage> {
                 'images/bg-hau.jpg',
                 fit: BoxFit.cover,
                 width: double.infinity,
-                height: 340,
+                height: 310,
               ),
               Container(
                 width: double.infinity,
