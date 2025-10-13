@@ -346,6 +346,50 @@ String? name,
     }
   }
 
+  Future<Map<String, dynamic>> deleteClaim(String claimId) async {
+  try {
+    final dio = await _getDio(); 
+    final response = await dio.delete('/claims/$claimId'); 
+    return {'message': response.data['message'] ?? 'Claim deleted successfully'};
+  } catch (e) {
+    debugPrint("Error deleting the claim: $e");
+    return {'error': e.toString()};
+  }
+}
+
+
+  Future<Response> updateClaim(String claimId, Map<String, dynamic> updatedData) async {
+    try {
+      final dio = await _getDio();
+
+      final formData = FormData.fromMap(updatedData);
+
+      final response = await dio.put(
+        '/claims/$claimId',
+        data: formData,
+        options: Options(
+          headers: {'Content-Type': 'multipart/form-data'},
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        debugPrint(" Successfully updated claim: $claimId");
+      } else {
+        debugPrint(" Failed to update claim: ${response.statusCode}");
+      }
+
+      return response;
+    } catch (e) {
+      debugPrint("Error updating claim: $e");
+      return Response(
+        requestOptions: RequestOptions(path: '/claims/$claimId'),
+        statusCode: 500,
+        data: {'error': e.toString()},
+      );
+    }
+  }
+
+
   Future<Map<String, dynamic>> denyClaim(String claimId) async {
     try {
       final dio = await _getDio(); 
