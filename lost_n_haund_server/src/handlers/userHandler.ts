@@ -48,7 +48,7 @@ class UserHandler {
           { email: regexOrAll(user_email) },
           { user_id: regexOrAll(user_id) },
           { phone_num: regexOrAll(phone_num) },
-          { user_role: regexOrAll(user_role) },
+          { role: regexOrAll(user_role) },
         ],
       };
       const users = await authUsersDB
