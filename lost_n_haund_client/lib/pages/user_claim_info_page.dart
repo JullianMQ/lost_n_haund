@@ -145,39 +145,7 @@ class UserItemInfo extends StatelessWidget {
 
                     const SizedBox(height: 20),
 
-                    // User-only: Optional Edit button (if pending)
                     if (isPending)
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            // TODO: Navigate to EditClaimPage
-                            // Example: Navigator.push(context, MaterialPageRoute(builder: (context) => EditClaimPage(claimData: itemData)));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Navigate to edit claim (implement EditClaimPage)'),
-                                backgroundColor: Colors.orange,
-                              ),
-                            );
-                            // After editing, refresh claims list in UserClaimsPage via Provider
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: const BorderSide(color: Colors.white, width: 2),
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          ),
-                          child: const Text(
-                            "Edit Claim",
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-
-                    // Back button for users
                     const SizedBox(height: 10),
                     SizedBox(
                       width: double.infinity,

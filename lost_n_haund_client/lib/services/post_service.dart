@@ -347,40 +347,73 @@ String? name,
   }
 
   Future<Map<String, dynamic>> deleteClaim(String claimId) async {
-  try {
-    final dio = await _getDio(); 
-    final response = await dio.delete('/claims/$claimId'); 
-    return {'message': response.data['message'] ?? 'Claim deleted successfully'};
-  } catch (e) {
-    debugPrint("Error deleting the claim: $e");
-    return {'error': e.toString()};
-  }
-}
+    try {
+      final dio = await _getDio();
 
+      final response = await dio.delete('/claims/$claimId');
+
+      if (response.statusCode == 200) {
+        debugPrint("Claim deleted successfully: $claimId");
+        return {
+          'message': response.data['message'] ?? 'Claim deleted successfully',
+        };
+      } else if (response.statusCode == 403) {
+        debugPrint("Forbidden: The server denied the request (likely missing session cookie).");
+        return {'error': 'Forbidden (403): You may need to log in again.'};
+      } else {
+        final msg = response.data?['message'] ??
+            response.data?['error'] ??
+            'Unexpected error (${response.statusCode})';
+        debugPrint(" Delete failed: $msg");
+        return {'error': msg};
+      }
+    } on DioException catch (e) {
+      debugPrint("DioException deleting claim: ${e.response?.data ?? e.message}");
+      return {'error': e.response?.data ?? e.message ?? 'Unknown Dio error'};
+    } catch (e) {
+      debugPrint("Unexpected error deleting claim: $e");
+      return {'error': e.toString()};
+    }
+  }
 
   Future<Response> updateClaim(String claimId, Map<String, dynamic> updatedData) async {
     try {
       final dio = await _getDio();
 
-      final formData = FormData.fromMap(updatedData);
-
       final response = await dio.put(
         '/claims/$claimId',
-        data: formData,
+        data: FormData.fromMap(updatedData),
         options: Options(
-          headers: {'Content-Type': 'multipart/form-data'},
+          headers: {
+            'Content-Type': 'application/json',
+          },
         ),
       );
 
-      if (response.statusCode == 200) {
-        debugPrint(" Successfully updated claim: $claimId");
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint("Successfully updated claim: $claimId");
+        return response;
       } else {
-        debugPrint(" Failed to update claim: ${response.statusCode}");
+        final msg = response.data?['message'] ??
+            response.data?['error'] ??
+            'Unexpected error (${response.statusCode})';
+        debugPrint("Update failed: $msg");
+        return Response(
+          requestOptions: RequestOptions(path: '/claims/$claimId'),
+          statusCode: response.statusCode,
+          data: {'message': msg},
+        );
       }
-
-      return response;
+    } on DioException catch (e) {
+      debugPrint("DioException while updating claim: ${e.response?.data ?? e.message}");
+      return e.response ??
+          Response(
+            requestOptions: RequestOptions(path: '/claims/$claimId'),
+            statusCode: 500,
+            data: {'error': e.message ?? 'Unknown Dio error'},
+          );
     } catch (e) {
-      debugPrint("Error updating claim: $e");
+      debugPrint("Unexpected error while updating claim: $e");
       return Response(
         requestOptions: RequestOptions(path: '/claims/$claimId'),
         statusCode: 500,
