@@ -274,7 +274,7 @@ class _EditClaimPageState extends State<EditClaimPage> {
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Claim updated successfully!'),
+            content: Text('Claim updated successfully!'),
             backgroundColor: Colors.green,
           ),
         );
