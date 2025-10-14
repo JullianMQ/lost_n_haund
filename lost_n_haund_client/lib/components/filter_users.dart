@@ -39,7 +39,7 @@ class UserFilterProvider with ChangeNotifier {
       final result = await _service.getUsers(
         name: name,
         email: email,
-        password: password,
+        userId: userId,
       );
       users = List<Map<String, dynamic>>.from(result);
     } catch (e) {
