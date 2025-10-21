@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lost_n_haund_client/pages/admin_users.dart';
 import 'package:lost_n_haund_client/pages/form_page.dart';
 import 'package:lost_n_haund_client/pages/contact_page.dart';
@@ -8,10 +9,30 @@ import 'package:lost_n_haund_client/pages/login_page.dart';
 import 'package:lost_n_haund_client/pages/admin_page.dart';
 import 'package:lost_n_haund_client/pages/claims_users.dart';
 
-
-class CustomDrawer extends StatelessWidget {
+class CustomDrawer extends StatefulWidget {
   final bool isAdmin;
+
   const CustomDrawer({super.key, this.isAdmin = false});
+
+  @override
+  State<CustomDrawer> createState() => _CustomDrawerState();
+}
+
+class _CustomDrawerState extends State<CustomDrawer> {
+  String? username;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsername();
+  }
+
+  Future<void> _loadUsername() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      username = prefs.getString('username') ?? prefs.getString('name') ?? "User";
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,30 +47,49 @@ class CustomDrawer extends StatelessWidget {
                 children: [
                   Image.asset("images/logo.jpg", height: 50),
                   const SizedBox(width: 10),
-                  const Text(
-                    "HOLY ANGEL\nUNIVERSITY",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "HOLY ANGEL\nUNIVERSITY",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (username != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            "@$username",
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
                     ),
-                  )
+                  ),
                 ],
               ),
+
               const SizedBox(height: 20),
 
               Expanded(
                 child: ListView(
-                  children: isAdmin
+                  children: widget.isAdmin
                       ? [
                           buttonOption(context, "Dashboard", AdminPage()),
-                          buttonOption(context, "Users", AdminUserPage()),
+                          buttonOption(context, "Users", const AdminUserPage()),
                         ]
                       : [
                           buttonOption(context, "Home", HomePage()),
-                          buttonOption(context, "Form", FormPage()),
-                          buttonOption(context, "About", AboutUsPage()),
-                          buttonOption(context, "Claims", UserClaimsPage()),
-                          buttonOption(context, "Contact Us", ContactPage()),
+                          buttonOption(context, "Form", const FormPage()),
+                          buttonOption(context, "About", const AboutUsPage()),
+                          buttonOption(context, "Claims", const UserClaimsPage()),
+                          buttonOption(context, "Contact Us", const ContactPage()),
                         ],
                 ),
               ),
@@ -65,12 +105,15 @@ class CustomDrawer extends StatelessWidget {
                       side: const BorderSide(color: Colors.white),
                     ),
                   ),
-                  onPressed: () {
-                    Navigator.pop(context); 
+                  onPressed: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.clear(); 
+
+                    Navigator.pop(context);
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(builder: (context) => const LoginPage()),
-                      (route) => false, 
+                      (route) => false,
                     );
                   },
                   child: const Text("Logout", style: TextStyle(fontSize: 16)),
@@ -79,7 +122,7 @@ class CustomDrawer extends StatelessWidget {
 
               const SizedBox(height: 10),
               Text(
-                isAdmin ? "© 2025 HAU Admin" : "© 2025 HAU",
+                widget.isAdmin ? "© 2025 HAU Admin" : "© 2025 HAU",
                 style: const TextStyle(color: Colors.white70, fontSize: 12),
                 textAlign: TextAlign.center,
               ),
@@ -103,7 +146,7 @@ class CustomDrawer extends StatelessWidget {
           ),
         ),
         onPressed: () {
-          Navigator.pop(context); 
+          Navigator.pop(context);
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => page),
@@ -114,9 +157,17 @@ class CustomDrawer extends StatelessWidget {
     );
   }
 }
+  class Header extends StatelessWidget implements PreferredSizeWidget {
+  final String titleLine1;
+  final String? titleLine2;
+  final Widget? trailing;
 
-class Header extends StatelessWidget implements PreferredSizeWidget {
-  const Header({super.key});
+  const Header({
+    super.key,
+    this.titleLine1 = "HOLY ANGEL",
+    this.titleLine2 = "UNIVERSITY",
+    this.trailing,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -135,29 +186,45 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
             fit: BoxFit.contain,
           ),
           const SizedBox(width: 10),
-          const Expanded(
-            child: Text(
-              "HOLY ANGEL\nUNIVERSITY",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-              softWrap: true,
-              overflow: TextOverflow.visible,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "$titleLine1",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                if (titleLine2 != null)
+                  Text(
+                    "$titleLine2",
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.black54,
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
       ),
       actions: [
-        Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Color(0xFF800020)),
-            onPressed: () {
-              Scaffold.of(context).openEndDrawer();
-            },
+        if (trailing != null)
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: trailing!,
+          )
+        else
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu, color: Color(0xFF800020)),
+              onPressed: () => Scaffold.of(context).openEndDrawer(),
+            ),
           ),
-        ),
       ],
     );
   }
@@ -165,3 +232,4 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => const Size.fromHeight(75);
 }
+

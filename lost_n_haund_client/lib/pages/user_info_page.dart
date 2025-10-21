@@ -77,14 +77,14 @@ class _UserInfoPageState extends State<UserInfoPage> {
                         }
                       },
                     ),
-                    _actionButton(
-                      context,
-                      label: 'Update User',
-                      color: Colors.blue,
-                      onPressed: () {
-                        _showUpdateDialog(context, name);
-                      },
-                    ),
+                    // _actionButton(
+                    //   context,
+                    //   label: 'Update User',
+                    //   color: Colors.blue,
+                    //   onPressed: () {
+                    //     _showUpdateDialog(context, name);
+                    //   },
+                    // ),
                     _actionButton(
                       context,
                       label: 'Delete User',

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:lost_n_haund_client/components/header.dart';
-import 'package:lost_n_haund_client/components/my_textfield.dart';
 import 'package:lost_n_haund_client/components/claim_card.dart';
 import 'package:lost_n_haund_client/components/filter_button.dart';
 import 'package:lost_n_haund_client/components/filter_claim.dart';
 import 'package:provider/provider.dart';
-
+import 'package:lost_n_haund_client/pages/user_claim_info_page.dart'; 
+import 'package:lost_n_haund_client/pages/edit_claim_page.dart'; 
 
 class UserClaimsPage extends StatefulWidget {
   const UserClaimsPage({super.key});
@@ -15,10 +15,6 @@ class UserClaimsPage extends StatefulWidget {
 }
 
 class _UserClaimsPageState extends State<UserClaimsPage> {
-  final firstNameController = TextEditingController();
-  final lastNameController = TextEditingController();
-  final userIdController = TextEditingController();
-  final ownerIdController = TextEditingController();
   bool showApproved = false;
 
   @override
@@ -38,7 +34,7 @@ class _UserClaimsPageState extends State<UserClaimsPage> {
         preferredSize: Size.fromHeight(75),
         child: Header(),
       ),
-      endDrawer: const CustomDrawer(isAdmin: false),
+      endDrawer: const CustomDrawer(isAdmin: false), // Non-admin drawer for user view
       body: Column(
         children: [
           const SizedBox(height: 10),
@@ -49,7 +45,7 @@ class _UserClaimsPageState extends State<UserClaimsPage> {
                 'images/bg-hau.jpg',
                 fit: BoxFit.cover,
                 width: double.infinity,
-                height: 310,
+                height: 150,
               ),
               Container(
                 width: double.infinity,
@@ -69,53 +65,6 @@ class _UserClaimsPageState extends State<UserClaimsPage> {
                 
                 child: Column(
                   children: [
-                    const Text(
-                      "Search Claims",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    MyTextfield(
-                      controller: firstNameController,
-                      hintText: 'First Name',
-                      obscureText: false,
-                      maxLines: 1,
-                      onChanged: (val) {
-                        context
-                            .read<ClaimFilterProvider>()
-                            .setFirstName(val);
-                      },
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    MyTextfield(
-                      controller: lastNameController,
-                      hintText: 'Last Name',
-                      obscureText: false,
-                      maxLines: 1,
-                      onChanged: (val) {
-                        context
-                            .read<ClaimFilterProvider>()
-                            .setLastName(val);
-                      },
-                    ),
-
-                    const SizedBox(height: 15),
-                    const Text(
-                      "My Claims",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -224,6 +173,13 @@ class _UserClaimsPageState extends State<UserClaimsPage> {
                           : "Pending",
                       claimId: claim['_id'] ?? 'N/A',
                       claimData: claim,
+                      isUser: true, 
+                      onEdit: () {
+                        _navigateToEditClaim(context, claim);
+                      },
+                      onMoreInfo: (claimData) {
+                        claimDetails(context, claimData);
+                      },
                     );
                   },
                 );
@@ -231,6 +187,26 @@ class _UserClaimsPageState extends State<UserClaimsPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _navigateToEditClaim(BuildContext context, Map<String, dynamic> claim) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => EditClaimPage(claimData: claim),
+    ),
+  ).then((_) {
+    Provider.of<ClaimFilterProvider>(context, listen: false).fetchClaims();
+  });
+}
+
+  void claimDetails(BuildContext context, Map<String, dynamic> claimData) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UserItemInfo(itemData: claimData),
       ),
     );
   }

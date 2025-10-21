@@ -120,7 +120,10 @@ class PostService {
   }
 
   Future<void> logoutUser(BuildContext context) async {
-    await _handleRequest(context, (dio) async => dio.post("/users/auth/logout"));
+    await _handleRequest(
+      context,
+      (dio) async => dio.post("/users/auth/logout"),
+    );
     await _cookieJar?.deleteAll();
     await clearToken();
   }
@@ -182,7 +185,7 @@ class PostService {
         "user_email": email,
         "phone_num": contact,
         "user_id": studentId,
-        "image_url": imageUrl, 
+        "image_url": imageUrl,
         "reference_id": referenceId,
         "justification": justification,
       });
@@ -192,9 +195,9 @@ class PostService {
     } catch (e) {
       debugPrint('Error creating claim: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating claim: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error creating claim: $e')));
       }
       return Response(
         requestOptions: RequestOptions(path: '/claims'),
@@ -210,49 +213,47 @@ class PostService {
   }
 
   Future<Response> getFilteredClaims({
-String? name,
-  String? firstName,
-  String? lastName,
-  String? userId,
-  String? ownerId,
-}) async {
-  final dio = await _getDio();
+    String? name,
+    String? firstName,
+    String? lastName,
+    String? userId,
+    String? ownerId,
+  }) async {
+    final dio = await _getDio();
 
-  String? fName = firstName?.trim();
-  String? lName = lastName?.trim();
+    String? fName = firstName?.trim();
+    String? lName = lastName?.trim();
 
-  if ((fName?.isEmpty ?? true) && (lName?.isEmpty ?? true) && (name?.trim().isNotEmpty ?? false)) {
-    final parts = name!.trim().split(RegExp(r'\s+'));
-    if (parts.length == 1) {
-      fName = null;
-      lName = parts.first;
-    } else {
-      fName = parts.first;
-      lName = parts.sublist(1).join(' ');
+    if ((fName?.isEmpty ?? true) &&
+        (lName?.isEmpty ?? true) &&
+        (name?.trim().isNotEmpty ?? false)) {
+      final parts = name!.trim().split(RegExp(r'\s+'));
+      if (parts.length == 1) {
+        fName = null;
+        lName = parts.first;
+      } else {
+        fName = parts.first;
+        lName = parts.sublist(1).join(' ');
+      }
     }
-  }
 
-  final Map<String, dynamic> qp = {};
-  if (fName?.isNotEmpty ?? false) qp['first_name'] = fName;
-  if (lName?.isNotEmpty ?? false) qp['last_name'] = lName;
-  if (userId?.isNotEmpty ?? false) qp['user_id'] = userId;
-  if (ownerId?.isNotEmpty ?? false) qp['owner_id'] = ownerId;
+    final Map<String, dynamic> qp = {};
+    if (fName?.isNotEmpty ?? false) qp['first_name'] = fName;
+    if (lName?.isNotEmpty ?? false) qp['last_name'] = lName;
+    if (userId?.isNotEmpty ?? false) qp['user_id'] = userId;
+    if (ownerId?.isNotEmpty ?? false) qp['owner_id'] = ownerId;
 
-  try {
-    final response = await dio.get(
-      '/claims',
-      queryParameters: qp,
-      options: Options(
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      ),
-    );
+    try {
+      final response = await dio.get(
+        '/claims',
+        queryParameters: qp,
+        options: Options(headers: {'Content-Type': 'application/json'}),
+      );
 
-    return response;
-  } catch (e) {
-    rethrow;
-  }
+      return response;
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<Response> createLostItem({
@@ -281,25 +282,25 @@ String? name,
       final imageUrl =
           uploadResponse.data['success']?['urlImage']?.toString() ?? '';
 
-    final res = await dio.post(
-    '/posts',
-    data: FormData.fromMap({
-      'item_name': itemName,
-      'item_category': itemCategories, 
-      'description': description,
-      'date_found': dateFound,
-      'location_found': locationFound,
-      'image_url': imageUrl,
-    }),
-  );
+      final res = await dio.post(
+        '/posts',
+        data: FormData.fromMap({
+          'item_name': itemName,
+          'item_category': itemCategories,
+          'description': description,
+          'date_found': dateFound,
+          'location_found': locationFound,
+          'image_url': imageUrl,
+        }),
+      );
 
       return res;
     } catch (e) {
       debugPrint('Unexpected error: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unexpected error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Unexpected error: $e')));
       }
       return Response(
         requestOptions: RequestOptions(path: '/posts'),
@@ -335,9 +336,9 @@ String? name,
     return dio.get("/posts", queryParameters: qp);
   }
 
-    Future<Map<String, dynamic>> acceptClaim(String claimId) async {
+  Future<Map<String, dynamic>> acceptClaim(String claimId) async {
     try {
-      final dio = await _getDio(); 
+      final dio = await _getDio();
       final response = await dio.post('/claims/accept/$claimId');
       return {'message': response.data['message'] ?? 'Claim accepted'};
     } catch (e) {
@@ -346,9 +347,92 @@ String? name,
     }
   }
 
+  Future<Map<String, dynamic>> deleteClaim(String claimId) async {
+    try {
+      final dio = await _getDio();
+
+      final response = await dio.delete('/claims/$claimId');
+
+      if (response.statusCode == 200) {
+        debugPrint("Claim deleted successfully: $claimId");
+        return {
+          'message': response.data['message'] ?? 'Claim deleted successfully',
+        };
+      } else if (response.statusCode == 403) {
+        debugPrint(
+          "Forbidden: The server denied the request (the user does not have enough privilege).",
+        );
+        return {'error': 'Forbidden (403): You may need to log in again.'};
+      } else {
+        final msg =
+            response.data?['message'] ??
+            response.data?['error'] ??
+            'Unexpected error (${response.statusCode})';
+        debugPrint(" Delete failed: $msg");
+        return {'error': msg};
+      }
+    } on DioException catch (e) {
+      debugPrint(
+        "DioException deleting claim: ${e.response?.data ?? e.message}",
+      );
+      return {'error': e.response?.data ?? e.message ?? 'Unknown Dio error'};
+    } catch (e) {
+      debugPrint("Unexpected error deleting claim: $e");
+      return {'error': e.toString()};
+    }
+  }
+
+  Future<Response> updateClaim(
+    String claimId,
+    Map<String, dynamic> updatedData,
+  ) async {
+    try {
+      final dio = await _getDio();
+
+      final response = await dio.put(
+        '/claims/$claimId',
+        data: FormData.fromMap(updatedData),
+        options: Options(headers: {'Content-Type': 'application/json'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint("Successfully updated claim: $claimId");
+        return response;
+      } else {
+        final msg =
+            response.data?['message'] ??
+            response.data?['error'] ??
+            'Unexpected error (${response.statusCode})';
+        debugPrint("Update failed: $msg");
+        return Response(
+          requestOptions: RequestOptions(path: '/claims/$claimId'),
+          statusCode: response.statusCode,
+          data: {'message': msg},
+        );
+      }
+    } on DioException catch (e) {
+      debugPrint(
+        "DioException while updating claim: ${e.response?.data ?? e.message}",
+      );
+      return e.response ??
+          Response(
+            requestOptions: RequestOptions(path: '/claims/$claimId'),
+            statusCode: 500,
+            data: {'error': e.message ?? 'Unknown Dio error'},
+          );
+    } catch (e) {
+      debugPrint("Unexpected error while updating claim: $e");
+      return Response(
+        requestOptions: RequestOptions(path: '/claims/$claimId'),
+        statusCode: 500,
+        data: {'error': e.toString()},
+      );
+    }
+  }
+
   Future<Map<String, dynamic>> denyClaim(String claimId) async {
     try {
-      final dio = await _getDio(); 
+      final dio = await _getDio();
       final response = await dio.post('/claims/deny/$claimId');
       return {'message': response.data['message'] ?? 'Claim denied'};
     } catch (e) {
@@ -361,34 +445,28 @@ String? name,
     String? name,
     String? userId,
     String? email,
-    String? password,
     int page = 0,
   }) async {
     try {
       final dio = await _getDio();
       final query = {
         if (name != null && name.isNotEmpty) 'name': name,
-        if (userId != null && userId.isNotEmpty) 'user_id': userId, 
-        if (email != null && email.isNotEmpty) 'email': email,
-        if (password != null && password.isNotEmpty) 'password': password,
+        if (userId != null && userId.isNotEmpty) 'user_id': userId,
+        if (email != null && email.isNotEmpty) 'user_email': email,
         'page': page,
       };
 
+      // TODO: add debounce timer when fetching, to lessen load on server
       final response = await dio.get(
-        '/users/auth/admin/list-users',
+        '/user',
         queryParameters: query,
       );
 
       if (response.statusCode == 200 && response.data != null) {
-        final data = List<Map<String, dynamic>>.from(response.data['users'] ?? []);
+        final data = List<Map<String, dynamic>>.from(
+          response.data['users'] ?? [],
+        );
 
-        for (var user in data) {
-          if (user['_id'] == null && user['id'] != null) {
-            user['_id'] = user['id']; 
-          }
-        }
-
-        print("Raw users data: $data");
         return data;
       } else {
         throw Exception('Failed to load users');
@@ -400,64 +478,61 @@ String? name,
   }
 
   Future<void> removeUser({
-  required String id,  
-  required String token,
-  required String email,
-}) async {
-  try {
-    final dio = await _getDio();
+    required String id,
+    required String token,
+    required String email,
+  }) async {
+    try {
+      final dio = await _getDio();
 
-    print('Removing user → MongoDB _id: $id');  
-    print(' | email: $email');  
+      print('Removing user → MongoDB _id: $id');
+      print(' | email: $email');
 
-    final response = await dio.post(
-      '/users/auth/admin/remove-user',
-      data: {
-        "userId": id,  
-        "email": email,  
-      },
-      options: Options(headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      }),
-    );
+      final response = await dio.post(
+        '/users/auth/admin/remove-user',
+        data: {"userId": id, "email": email},
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
 
-    if (response.statusCode == 200) {
-      print("User removed successfully: ${response.data}");
-    } else {
-      throw Exception('Failed to remove user: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        print("User removed successfully: ${response.data}");
+      } else {
+        throw Exception('Failed to remove user: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      print("Failed to remove user: ${e.response?.data ?? e.message}");
+      if (e.response != null) {
+        print("Full error response: ${e.response?.data}");
+      }
+      rethrow;
+    } catch (e) {
+      print(" Unexpected error removing user: $e");
+      rethrow;
     }
-  } on DioException catch (e) {
-    print("Failed to remove user: ${e.response?.data ?? e.message}");
-    if (e.response != null) {
-      print("Full error response: ${e.response?.data}");
-    }
-    rethrow;
-  } catch (e) {
-    print(" Unexpected error removing user: $e");
-    rethrow;
   }
-}
 
   Future<Response> updateUser({
     required String name,
     required String image,
     required String token,
-
   }) async {
     final dio = await _getDio();
 
     try {
       final res = await dio.post(
         '/users/auth/update-user',
-        data: {
-          "name": name,
-          "image": image,
-        },
-        options: Options(headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        }),
+        data: {"name": name, "image": image},
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        ),
       );
       return res;
     } catch (e) {
@@ -465,86 +540,76 @@ String? name,
     }
   }
 
-Future<void> banUser({
-  required String id,      
-  required String token,   
-  required String reason,  
-}) async {
-  try {
-    final dio = await _getDio();
+  Future<void> banUser({
+    required String id,
+    required String token,
+    required String reason,
+  }) async {
+    try {
+      final dio = await _getDio();
 
-    print('Banning user → MongoDB _id: $id');
-    print(' | Reason: $reason');
+      print('Banning user → MongoDB _id: $id');
+      print(' | Reason: $reason');
 
-    final response = await dio.post(
-      '/users/auth/admin/ban-user',
-      data: {
-        "userId": id,
-        "banReason": reason,
-      },
-      options: Options(headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      }),
-    );
+      final response = await dio.post(
+        '/users/auth/admin/ban-user',
+        data: {"userId": id, "banReason": reason},
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
 
-    if (response.statusCode == 200) {
-      print("✅ User banned successfully: ${response.data}");
-    } else {
-      throw Exception(' Failed to ban user: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        print("✅ User banned successfully: ${response.data}");
+      } else {
+        throw Exception(' Failed to ban user: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      print(" Failed to ban user: ${e.response?.data ?? e.message}");
+      if (e.response != null) {
+        print("Full error response: ${e.response?.data}");
+      }
+      rethrow;
+    } catch (e) {
+      print(" Unexpected error banning user: $e");
+      rethrow;
     }
-  } on DioException catch (e) {
-    print(" Failed to ban user: ${e.response?.data ?? e.message}");
-    if (e.response != null) {
-      print("Full error response: ${e.response?.data}");
+  }
+
+  Future<void> unbanUser({required String id, required String token}) async {
+    try {
+      final dio = await _getDio();
+
+      print('Unbanning user → MongoDB _id: $id');
+
+      final response = await dio.post(
+        '/users/auth/admin/unban-user',
+        data: {"userId": id},
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        print(" User unbanned successfully: ${response.data}");
+      } else {
+        throw Exception(' Failed to unban user: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      print(" Failed to unban user: ${e.response?.data ?? e.message}");
+      if (e.response != null) {
+        print("Full error response: ${e.response?.data}");
+      }
+      rethrow;
+    } catch (e) {
+      print(" Unexpected error unbanning user: $e");
+      rethrow;
     }
-    rethrow;
-  } catch (e) {
-    print(" Unexpected error banning user: $e");
-    rethrow;
   }
 }
-
-Future<void> unbanUser({
-  required String id,
-  required String token,
-}) async {
-  try {
-    final dio = await _getDio();
-
-    print('Unbanning user → MongoDB _id: $id');
-
-    final response = await dio.post(
-      '/users/auth/admin/unban-user',
-      data: {
-        "userId": id,
-      },
-      options: Options(headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      print(" User unbanned successfully: ${response.data}");
-    } else {
-      throw Exception(' Failed to unban user: ${response.statusCode}');
-    }
-  } on DioException catch (e) {
-    print(" Failed to unban user: ${e.response?.data ?? e.message}");
-    if (e.response != null) {
-      print("Full error response: ${e.response?.data}");
-    }
-    rethrow;
-  } catch (e) {
-    print(" Unexpected error unbanning user: $e");
-    rethrow;
-  }
-}
-
-
-
-
-}
-  
-
